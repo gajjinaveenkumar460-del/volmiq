@@ -1,0 +1,131 @@
+/* Finalized single-stroke ribbon intro (ported from locked splash) */
+
+.vox-intro {
+  --bg: #f4f5f7;
+  --navy: #10162b;
+  --blue: #3b62ee;
+  --violet: #7c5cff;
+  --cyan: #2fd6e6;
+
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: var(--font-poppins), "Poppins", -apple-system, BlinkMacSystemFont,
+    sans-serif;
+}
+
+.vox-intro__stage {
+  position: relative;
+  width: min(92vw, 780px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.vox-intro__svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  display: block;
+}
+
+.vox-intro__text {
+  margin-top: 2%;
+  text-align: center;
+  opacity: 0;
+}
+
+.vox-intro__wordmark {
+  font-size: clamp(30px, 6.4vw, 58px);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.vox-intro__wordmark .vox {
+  color: var(--blue);
+}
+
+.vox-intro__wordmark .mind {
+  color: var(--violet);
+}
+
+.vox-intro__tagline {
+  margin-top: 0.7em;
+  font-size: clamp(11px, 1.7vw, 16px);
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.vox-intro__tagline .voice {
+  color: var(--blue);
+}
+
+.vox-intro__tagline .community {
+  color: var(--violet);
+}
+
+.vox-intro__replay {
+  position: absolute;
+  bottom: -56px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: transparent;
+  border: 1px solid rgba(16, 22, 43, 0.2);
+  color: rgba(16, 22, 43, 0.55);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.vox-intro__replay:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* Final logo: soft lift (shadow stays grounded via separate cast layer) */
+.vox-intro__ribbon--live {
+  animation: vox-ribbon-breathe 3.2s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+@keyframes vox-ribbon-breathe {
+  0%,
+  100% {
+    filter: brightness(1);
+    transform: translateY(0);
+  }
+  50% {
+    filter: brightness(1.05);
+    transform: translateY(-2px);
+  }
+}
+
+.vox-intro__floor-glow,
+.vox-intro__cast-shadow {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vox-intro__ribbon--live {
+    animation: none;
+  }
+}
