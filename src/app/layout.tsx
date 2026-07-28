@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Poppins } from "next/font/google";
+import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,16 +12,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const poppins = Poppins({
-  variable: "--font-poppins",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
   title: "Volmiq — Your Voice. Your Community.",
   description:
-    "Multi-community Q&A for diaspora life — starting with Canada. Real voices. Real answers.",
+    "Multi-community Q&A for exam aspirants and careers. Real voices. Real answers.",
 };
 
 export default function RootLayout({
@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} min-h-screen antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${jakarta.variable} min-h-screen antialiased`}
       >
         {children}
       </body>
