@@ -3,14 +3,21 @@
 import { useState } from "react";
 import { communities, posts } from "@/lib/seed";
 import { PostCard } from "@/components/posts/PostCard";
+import { usePosts } from "@/components/posts/PostsProvider";
 
-export function HomeFeed(){
-    const [selectedCommunity, setSelectedCommunity] = useState<string>("all");
+export function HomeFeed() {
+  const { extraPosts } = usePosts();
+  const [selectedCommunity, setSelectedCommunity] = useState<string>("all");
 
-    const visiblePosts = selectedCommunity === "all" ? posts : posts.filter((p) => p.communitySlug === selectedCommunity);
+  // User-created questions first, then seed
+  const allPosts = [...extraPosts, ...posts];
 
-    
-        return (
+  const visiblePosts =
+    selectedCommunity === "all"
+      ? allPosts
+      : allPosts.filter((p) => p.communitySlug === selectedCommunity);
+
+  return (
     <div className="mx-auto flex max-w-2xl flex-col gap-3">
       {/* chips */}
       <div className="mb-1 flex flex-wrap gap-2">
@@ -50,5 +57,4 @@ export function HomeFeed(){
       )}
     </div>
   );
-    
 }

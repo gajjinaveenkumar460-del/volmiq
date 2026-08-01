@@ -1,4 +1,5 @@
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import Link from "next/link";
 
 type AppHeaderProps = {
   onMenuClick?: () => void;
@@ -43,12 +44,12 @@ export function AppHeader({ onMenuClick, menuOpen = false }: AppHeaderProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <button
-            type="button"
-            className="hidden rounded-full bg-[var(--purple)] px-4 py-1.5 text-[12px] font-semibold tracking-wide text-white shadow-sm shadow-[var(--purple)]/20 transition hover:bg-[var(--purple-deep)] sm:inline-flex"
+          <Link
+            href="/ask"
+            className="inline-flex rounded-full bg-[var(--purple)] px-3 py-1.5 text-[12px] font-semibold tracking-wide text-white no-underline shadow-sm shadow-[var(--purple)]/20 transition hover:bg-[var(--purple-deep)] sm:px-4"
           >
             Ask
-          </button>
+          </Link>
           <button
             type="button"
             className="rounded-full px-3 py-1.5 text-[12px] font-semibold tracking-wide text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)]"

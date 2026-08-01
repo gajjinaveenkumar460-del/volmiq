@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { posts, communities } from "@/lib/seed";
+import { QuestionThread } from "@/components/posts/QuestionThread";
+import { posts, communities, comments } from "@/lib/seed";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -15,6 +16,7 @@ export default async function PostDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  const postComments = comments.filter((c) => c.postId === post.id);
   const community = communities.find((c) => c.slug === post.communitySlug);
 
   return (
@@ -57,11 +59,14 @@ export default async function PostDetailPage({ params }: PageProps) {
             <span className="text-sm font-bold tabular-nums text-[var(--purple)]">
               ↑ {post.upvotes}
             </span>
-            <span className="text-[12px] font-medium text-[var(--muted)]">
-              answers soon
-            </span>
           </div>
         </article>
+
+        {/* Form + live answers (client state) */}
+        <QuestionThread
+          postId={post.id}
+          initialAnswers={postComments}
+        />
       </div>
     </AppShell>
   );
