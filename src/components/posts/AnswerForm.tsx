@@ -4,14 +4,16 @@ import { useState } from "react";
 
 type AnswerFormProps = {
   postId: string;
-  /** Parent (QuestionThread) appends the answer to the list */
-  onAddAnswer: (text: string) => void;
+  /** Parent saves to Supabase and updates the list */
+  onAddAnswer: (text: string) => Promise<void>;
 };
 
 export function AnswerForm({ postId, onAddAnswer }: AnswerFormProps) {
   const [body, setBody] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const text = body.trim();
     if (!text) {
@@ -19,9 +21,17 @@ export function AnswerForm({ postId, onAddAnswer }: AnswerFormProps) {
       return;
     }
 
-    onAddAnswer(text);
-    console.log("Answer added", { postId, body: text });
-    setBody("");
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      await onAddAnswer(text);
+      setBody("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to post answer");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -40,17 +50,21 @@ export function AnswerForm({ postId, onAddAnswer }: AnswerFormProps) {
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
+        disabled={submitting}
         rows={4}
         placeholder="Share a helpful answer…"
-        className="mt-3 w-full resize-y rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--purple)] focus:ring-2 focus:ring-[var(--purple)]/20"
+        className="mt-3 w-full resize-y rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--purple)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60"
       />
+
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
       <div className="mt-3 flex justify-end">
         <button
           type="submit"
-          className="rounded-full bg-[var(--purple)] px-4 py-2 text-[12px] font-semibold tracking-wide text-white shadow-sm shadow-[var(--purple)]/20 transition hover:bg-[var(--purple-deep)]"
+          disabled={submitting}
+          className="rounded-full bg-[var(--purple)] px-4 py-2 text-[12px] font-semibold tracking-wide text-white shadow-sm shadow-[var(--purple)]/20 transition hover:bg-[var(--purple-deep)] disabled:opacity-60"
         >
-          Post answer
+          {submitting ? "Posting…" : "Post answer"}
         </button>
       </div>
     </form>

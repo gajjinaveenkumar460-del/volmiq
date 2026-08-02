@@ -1,25 +1,57 @@
 "use client";
 
-import { useState } from "react";
-import { communities, posts } from "@/lib/seed";
+import { useEffect, useState } from "react";
+import type { Community } from "@/types/community";
+import type { Post } from "@/types/post";
 import { PostCard } from "@/components/posts/PostCard";
-import { usePosts } from "@/components/posts/PostsProvider";
+import { getAllCommunities } from "@/lib/supabase/communities";
+import { getAllPosts } from "@/lib/supabase/posts";
 
 export function HomeFeed() {
-  const { extraPosts } = usePosts();
   const [selectedCommunity, setSelectedCommunity] = useState<string>("all");
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [dbPosts, setDbPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // User-created questions first, then seed
-  const allPosts = [...extraPosts, ...posts];
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [postsList, communitiesList] = await Promise.all([
+          getAllPosts(),
+          getAllCommunities(),
+        ]);
+        if (cancelled) return;
+        setDbPosts(postsList);
+        setCommunities(communitiesList);
+      } catch (e) {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : "Failed to load feed");
+        setDbPosts([]);
+        setCommunities([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const visiblePosts =
     selectedCommunity === "all"
-      ? allPosts
-      : allPosts.filter((p) => p.communitySlug === selectedCommunity);
+      ? dbPosts
+      : dbPosts.filter((p) => p.communitySlug === selectedCommunity);
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-3">
-      {/* chips */}
       <div className="mb-1 flex flex-wrap gap-2">
         <button
           type="button"
@@ -49,12 +81,22 @@ export function HomeFeed() {
         ))}
       </div>
 
-      {/* posts */}
-      {visiblePosts.length === 0 ? (
-        <p className="text-sm text-[var(--muted)]">No posts in this room yet.</p>
-      ) : (
-        visiblePosts.map((post) => <PostCard key={post.id} post={post} />)
+      {loading && (
+        <p className="text-sm text-[var(--muted)]">Loading questions…</p>
       )}
+
+      {error && (
+        <p className="text-sm text-red-600">Could not load posts: {error}</p>
+      )}
+
+      {!loading && !error && visiblePosts.length === 0 && (
+        <p className="text-sm text-[var(--muted)]">No posts in this room yet.</p>
+      )}
+
+      {!loading &&
+        visiblePosts.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
     </div>
   );
 }

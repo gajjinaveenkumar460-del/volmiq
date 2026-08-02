@@ -1,3 +1,9 @@
+﻿/**
+ * ARCHIVED — not imported by the app.
+ * Live data: Supabase (communities, posts, answers).
+ * Do not re-import this file.
+ */
+
 export type community = {
     id: string;
     slug: string;
@@ -37,7 +43,7 @@ export const communities: community[] = [
     id: "2",
     slug: "jee",
     name: "JEE",
-    description: "JEE Main & Advanced — PCM doubts, plans, and rank talk.",
+    description: "JEE Main & Advanced ΓÇö PCM doubts, plans, and rank talk.",
     membercount: 6100,
   },
   {
@@ -85,7 +91,7 @@ export const posts: post[] = [
   {
     id: "p3",
     communitySlug: "jee",
-    title: "JEE Adv maths — which chapters first?",
+    title: "JEE Adv maths ΓÇö which chapters first?",
     body: "Done board-level calculus. Confused between algebra vs coordinate geometry next.",
     authorName: "Neha",
     createdAt: "2026-07-17",
@@ -112,7 +118,7 @@ export const posts: post[] = [
   {
     id: "p6",
     communitySlug: "neet",
-    title: "Physics numericals feel slow — tips?",
+    title: "Physics numericals feel slow ΓÇö tips?",
     body: "Concepts ok, speed is bad in full mocks. What worked for you?",
     authorName: "Karan",
     createdAt: "2026-07-21",
@@ -131,7 +137,7 @@ export const posts: post[] = [
     id: "p8",
     communitySlug: "gate",
     title: "PSU vs M.Tech after GATE?",
-    body: "Rank around expected 500–800 (hypothetical). How did you decide?",
+    body: "Rank around expected 500ΓÇô800 (hypothetical). How did you decide?",
     authorName: "Arjun",
     createdAt: "2026-07-22",
     upvotes: 16,
@@ -140,7 +146,7 @@ export const posts: post[] = [
     id: "p9",
     communitySlug: "careers",
     title: "First job after B.Tech: service company or wait for product?",
-    body: "Have one service offer. Worth waiting 2–3 months for product interviews?",
+    body: "Have one service offer. Worth waiting 2ΓÇô3 months for product interviews?",
     authorName: "Sneha",
     createdAt: "2026-07-14",
     upvotes: 39,
@@ -169,7 +175,7 @@ export const comments: comment[] = [
     id: "c2",
     postId: "p1",
     authorName: "Priya",
-    body: "Don’t jump to too many sources. One book, revise twice, then test yourself weekly.",
+    body: "DonΓÇÖt jump to too many sources. One book, revise twice, then test yourself weekly.",
     createdAt: "2026-07-19",
     upvotes: 8,
   },
@@ -185,7 +191,7 @@ export const comments: comment[] = [
     id: "c4",
     postId: "p2",
     authorName: "Meera",
-    body: "PSIR has more coaching material online; Sociology is shorter if you like society topics. Pick what you’ll revise happily.",
+    body: "PSIR has more coaching material online; Sociology is shorter if you like society topics. Pick what youΓÇÖll revise happily.",
     createdAt: "2026-07-19",
     upvotes: 15,
   },
@@ -193,7 +199,7 @@ export const comments: comment[] = [
     id: "c5",
     postId: "p2",
     authorName: "Ravi",
-    body: "I switched to Sociology mid-way — fewer theories to mug if your optional notes are crisp.",
+    body: "I switched to Sociology mid-way ΓÇö fewer theories to mug if your optional notes are crisp.",
     createdAt: "2026-07-20",
     upvotes: 6,
   },
@@ -238,4 +244,5 @@ export const comments: comment[] = [
     upvotes: 22,
   },
 ];
+
 

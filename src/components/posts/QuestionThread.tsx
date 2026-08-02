@@ -1,33 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import type { comment } from "@/lib/seed";
+import type { Answer } from "@/types/answer";
 import { AnswerForm } from "@/components/posts/AnswerForm";
+import { createAnswer } from "@/lib/supabase/answers";
 
 type QuestionThreadProps = {
   postId: string;
-  initialAnswers: comment[];
+  initialAnswers: Answer[];
 };
 
 /**
- * Client island: write form + live answers list (state lifted here).
+ * Client island: write form + answers list (persisted via Supabase).
  */
 export function QuestionThread({
   postId,
   initialAnswers,
 }: QuestionThreadProps) {
-  const [answers, setAnswers] = useState<comment[]>(initialAnswers);
+  const [answers, setAnswers] = useState<Answer[]>(initialAnswers);
 
-  function handleAddAnswer(text: string) {
-    const newAnswer: comment = {
-      id: `local-${Date.now()}`,
+  async function handleAddAnswer(text: string) {
+    const created = await createAnswer({
       postId,
-      authorName: "You",
       body: text,
-      createdAt: new Date().toISOString().slice(0, 10),
-      upvotes: 0,
-    };
-    setAnswers((prev) => [...prev, newAnswer]);
+      authorName: "You",
+    });
+    setAnswers((prev) => [...prev, created]);
   }
 
   return (
