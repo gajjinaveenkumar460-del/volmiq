@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Answer } from "@/types/answer";
 import { AnswerForm } from "@/components/posts/AnswerForm";
+import { AnswerComments } from "@/components/posts/AnswerComments";
 import { createAnswer } from "@/lib/supabase/answers";
 
 type QuestionThreadProps = {
@@ -11,7 +12,7 @@ type QuestionThreadProps = {
 };
 
 /**
- * Client island: write form + answers list (persisted via Supabase).
+ * Answers list + write-answer form + nested comments under each answer.
  */
 export function QuestionThread({
   postId,
@@ -58,6 +59,8 @@ export function QuestionThread({
                 <p className="mt-3 text-sm font-bold tabular-nums text-[var(--purple)]">
                   ↑ {a.upvotes}
                 </p>
+
+                <AnswerComments answerId={a.id} />
               </li>
             ))}
           </ul>

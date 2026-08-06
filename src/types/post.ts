@@ -7,6 +7,10 @@ export type Post = {
   authorName: string;
   createdAt: string;
   upvotes: number;
+  /** Number of answers on this question (from DB aggregate) */
+  answerCount?: number;
+  /** Number of comments across all answers (from DB aggregate) */
+  commentCount?: number;
 };
 
 /** Supabase posts table row (snake_case) */
@@ -18,6 +22,16 @@ export type PostRow = {
   author_name: string;
   upvotes: number;
   created_at: string;
+};
+
+/**
+ * Post row plus nested count payloads from Supabase embeds.
+ * Shape depends on select(): answers(comments(count))
+ */
+export type PostRowWithCounts = PostRow & {
+  answers?: Array<{
+    comments?: Array<{ count: number | string }>;
+  }>;
 };
 
 /** Payload for creating a post (no id / timestamps yet) */

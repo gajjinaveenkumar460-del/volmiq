@@ -5,6 +5,9 @@ import Link from "next/link";
  * One question card in the feed.
  */
 export function PostCard({ post }: { post: Post }) {
+  const answers = post.answerCount ?? 0;
+  const comments = post.commentCount ?? 0;
+
   return (
     <Link
       href={`/p/${post.id}`}
@@ -17,6 +20,7 @@ export function PostCard({ post }: { post: Post }) {
             type="button"
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)]"
             aria-label="Upvote"
+            onClick={(e) => e.preventDefault()}
           >
             <ChevronUp className="h-4 w-4" />
           </button>
@@ -27,6 +31,7 @@ export function PostCard({ post }: { post: Post }) {
             type="button"
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)]"
             aria-label="Downvote"
+            onClick={(e) => e.preventDefault()}
           >
             <ChevronDown className="h-4 w-4" />
           </button>
@@ -51,10 +56,14 @@ export function PostCard({ post }: { post: Post }) {
             {post.body}
           </p>
 
-          <div className="mt-3 flex items-center gap-4">
+          <div className="mt-3 flex flex-wrap items-center gap-4">
             <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--muted)]">
-              <ChatIcon className="h-3.5 w-3.5 text-[var(--purple-mid)]" />
-              answers
+              <AnswersIcon className="h-3.5 w-3.5 text-[var(--purple-mid)]" />
+              {answers} {answers === 1 ? "answer" : "answers"}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--muted)]">
+              <BubbleChatIcon className="h-3.5 w-3.5 text-[var(--purple)]" />
+              {comments} {comments === 1 ? "comment" : "comments"}
             </span>
           </div>
         </div>
@@ -97,7 +106,8 @@ function ChevronDown({ className }: { className?: string }) {
   );
 }
 
-function ChatIcon({ className }: { className?: string }) {
+/** Message square — answers */
+function AnswersIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -110,6 +120,25 @@ function ChatIcon({ className }: { className?: string }) {
       aria-hidden
     >
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+/** Round bubble chat — comments */
+function BubbleChatIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+      <path d="M8 12h.01M12 12h.01M16 12h.01" />
     </svg>
   );
 }

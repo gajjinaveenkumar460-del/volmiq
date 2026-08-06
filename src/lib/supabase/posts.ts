@@ -1,23 +1,30 @@
-import type { CreatePostInput, Post, PostRow } from "@/types/post";
+import type { CreatePostInput, Post, PostRow, PostRowWithCounts } from "@/types/post";
 import { supabase } from "@/lib/supabase/client";
 import { mapDbPost, mapDbPosts } from "@/lib/supabase/mappers/posts";
 
+/** Embed answers + comment counts for feed cards */
+const POST_SELECT_WITH_COUNTS = `
+  *,
+  answers (
+    comments (count)
+  )
+`;
+
 /**
  * Fetch all questions from Supabase, newest first.
- * Returns app-level Post[] (camelCase).
+ * Includes answerCount and commentCount.
  */
 export async function getAllPosts(): Promise<Post[]> {
   const { data, error } = await supabase
     .from("posts")
-    .select("*")
+    .select(POST_SELECT_WITH_COUNTS)
     .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  // Client has no generated Database types yet — assert row shape, then map
-  return mapDbPosts(data as PostRow[] | null);
+  return mapDbPosts(data as PostRowWithCounts[] | null);
 }
 
 /**
@@ -27,7 +34,7 @@ export async function getAllPosts(): Promise<Post[]> {
 export async function getPostById(id: string): Promise<Post | null> {
   const { data, error } = await supabase
     .from("posts")
-    .select("*")
+    .select(POST_SELECT_WITH_COUNTS)
     .eq("id", id)
     .maybeSingle();
 
@@ -36,7 +43,7 @@ export async function getPostById(id: string): Promise<Post | null> {
   }
 
   if (!data) return null;
-  return mapDbPost(data as PostRow);
+  return mapDbPost(data as PostRowWithCounts);
 }
 
 /**
@@ -59,5 +66,6 @@ export async function createPost(input: CreatePostInput): Promise<Post> {
     throw new Error(error.message);
   }
 
-  return mapDbPost(data as PostRow);
+  const post = mapDbPost(data as PostRow);
+  return { ...post, answerCount: 0, commentCount: 0 };
 }
