@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Comment } from "@/types/comment";
 import { CommentForm } from "@/components/posts/CommentForm";
 import { VoteButtons } from "@/components/posts/VoteButtons";
+import { draftKeys, hasDraft } from "@/lib/drafts";
 
 type CommentItemProps = {
   comment: Comment;
   answerId: string;
   depth?: number;
-  onReply: (parentId: string, body: string) => Promise<void>;
+  onReply: (parentId: string, body: string) => Promise<boolean>;
 };
 
 const MAX_REPLY_DEPTH = 4;
@@ -26,11 +27,16 @@ export function CommentItem({
   depth = 0,
   onReply,
 }: CommentItemProps) {
+  const replyDraftKey = draftKeys.comment(answerId, comment.id);
   const [showReply, setShowReply] = useState(false);
   const [childrenOpen, setChildrenOpen] = useState(true);
   const children = comment.children ?? [];
   const canReply = depth < MAX_REPLY_DEPTH;
   const hasChildren = children.length > 0;
+
+  useEffect(() => {
+    if (hasDraft(replyDraftKey)) setShowReply(true);
+  }, [replyDraftKey]);
 
   return (
     <div className={depth === 0 ? "pt-3" : ""}>
@@ -43,6 +49,7 @@ export function CommentItem({
         childrenOpen={childrenOpen}
         setChildrenOpen={setChildrenOpen}
         onReply={onReply}
+        replyDraftKey={replyDraftKey}
       />
 
       {hasChildren && childrenOpen && (
@@ -95,6 +102,7 @@ function CommentBody({
   childrenOpen,
   setChildrenOpen,
   onReply,
+  replyDraftKey,
 }: {
   comment: Comment;
   canReply: boolean;
@@ -103,7 +111,8 @@ function CommentBody({
   hasChildren: boolean;
   childrenOpen: boolean;
   setChildrenOpen: (v: boolean | ((p: boolean) => boolean)) => void;
-  onReply: (parentId: string, body: string) => Promise<void>;
+  onReply: (parentId: string, body: string) => Promise<boolean>;
+  replyDraftKey: string;
 }) {
   return (
     <>
@@ -149,12 +158,14 @@ function CommentBody({
       {showReply && (
         <CommentForm
           compact
+          draftKey={replyDraftKey}
           placeholder="Write a reply…"
           submitLabel="Reply"
           onCancel={() => setShowReply(false)}
           onSubmit={async (body) => {
-            await onReply(comment.id, body);
-            setShowReply(false);
+            const posted = await onReply(comment.id, body);
+            if (posted) setShowReply(false);
+            return posted;
           }}
         />
       )}

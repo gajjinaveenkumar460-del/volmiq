@@ -1,17 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  clearDraft,
+  draftKeys,
+  loadDraft,
+  saveDraft,
+  type BodyDraft,
+} from "@/lib/drafts";
 
 type AnswerFormProps = {
   postId: string;
-  /** Parent saves to Supabase and updates the list */
-  onAddAnswer: (text: string) => Promise<void>;
+  /**
+   * Parent creates the answer (or saves draft + redirects to login).
+   * Return true only if the answer was actually posted.
+   */
+  onAddAnswer: (text: string) => Promise<boolean>;
 };
 
 export function AnswerForm({ postId, onAddAnswer }: AnswerFormProps) {
+  const key = draftKeys.answer(postId);
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
+
+  useEffect(() => {
+    const draft = loadDraft<BodyDraft>(key);
+    if (draft?.body) {
+      setBody(draft.body);
+      setRestored(true);
+    }
+  }, [key]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,8 +45,15 @@ export function AnswerForm({ postId, onAddAnswer }: AnswerFormProps) {
     setError(null);
 
     try {
-      await onAddAnswer(text);
-      setBody("");
+      // Save draft before parent runs (covers login redirect without clear)
+      saveDraft(key, { body: text });
+      const posted = await onAddAnswer(text);
+      if (posted) {
+        clearDraft(key);
+        setBody("");
+        setRestored(false);
+      }
+      // if !posted → login redirect; keep text + draft
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to post answer");
     } finally {
@@ -46,6 +73,11 @@ export function AnswerForm({ postId, onAddAnswer }: AnswerFormProps) {
       <p className="mt-1 text-[12px] text-[var(--muted)]">
         Share a clear, helpful reply to this question.
       </p>
+      {restored && body && (
+        <p className="mt-2 text-[12px] font-medium text-[var(--purple)]">
+          Draft restored — review and post when ready.
+        </p>
+      )}
 
       <textarea
         value={body}

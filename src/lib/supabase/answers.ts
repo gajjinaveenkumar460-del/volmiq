@@ -4,13 +4,15 @@ import { mapDbAnswer, mapDbAnswers } from "@/lib/supabase/mappers/answers";
 
 /**
  * Fetch answers for a question (post id).
+ * Highest score first; newer first on ties.
  */
 export async function getAnswersByPostId(postId: string): Promise<Answer[]> {
   const { data, error } = await supabase
     .from("answers")
     .select("*")
     .eq("post_id", postId)
-    .order("created_at", { ascending: true });
+    .order("upvotes", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error(error.message);

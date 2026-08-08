@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MyVote, VoteTargetType } from "@/types/vote";
+import { loginWithNext } from "@/lib/auth/safeNextPath";
 import { castVote, getMyVote } from "@/lib/supabase/votes";
 import { createClient } from "@/lib/supabase/client";
 
@@ -13,6 +14,8 @@ type VoteButtonsProps = {
   /** "column" = feed card; "inline" = answer / comment / detail */
   variant?: "column" | "inline";
   className?: string;
+  /** Called after a successful vote with the new score */
+  onScoreChange?: (score: number) => void;
 };
 
 export function VoteButtons({
@@ -21,6 +24,7 @@ export function VoteButtons({
   initialScore,
   variant = "column",
   className = "",
+  onScoreChange,
 }: VoteButtonsProps) {
   const router = useRouter();
   const [score, setScore] = useState(initialScore);
@@ -60,7 +64,11 @@ export function VoteButtons({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      router.push("/login");
+      const next =
+        typeof window !== "undefined"
+          ? `${window.location.pathname}${window.location.search}`
+          : "/";
+      router.push(loginWithNext(next));
       return;
     }
 
@@ -69,6 +77,7 @@ export function VoteButtons({
       const result = await castVote(targetType, targetId, value);
       setScore(result.score);
       setMyVote(result.myVote);
+      onScoreChange?.(result.score);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Vote failed");
     } finally {

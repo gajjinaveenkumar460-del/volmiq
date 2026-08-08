@@ -5,13 +5,19 @@ import type { Comment } from "@/types/comment";
 import { CommentForm } from "@/components/posts/CommentForm";
 import { CommentItem } from "@/components/posts/CommentItem";
 import { displayNameFromUser } from "@/lib/auth/displayName";
+import { loginWithNext } from "@/lib/auth/safeNextPath";
+import {
+  draftKeys,
+  hasDraft,
+  saveDraft,
+} from "@/lib/drafts";
 import { createClient } from "@/lib/supabase/client";
 import {
   buildCommentTree,
   createComment,
   getCommentsByAnswerId,
 } from "@/lib/supabase/comments";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 type AnswerCommentsProps = {
   answerId: string;
@@ -19,22 +25,37 @@ type AnswerCommentsProps = {
 
 export function AnswerComments({ answerId }: AnswerCommentsProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const rootDraftKey = draftKeys.comment(answerId, null);
+
   const [tree, setTree] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   /** Whole comment section under an answer */
   const [sectionOpen, setSectionOpen] = useState(false);
 
-  async function requireAuthor(): Promise<{
-    authorName: string;
-    authorId: string;
-  } | null> {
+  // Open form if a draft was saved before login
+  useEffect(() => {
+    if (hasDraft(rootDraftKey)) {
+      setSectionOpen(true);
+      setShowForm(true);
+    }
+  }, [rootDraftKey]);
+
+  async function requireAuthor(bodyForDraft: string, parentId: string | null) {
     const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      router.push("/login");
+      saveDraft(draftKeys.comment(answerId, parentId), {
+        body: bodyForDraft,
+      });
+      const next =
+        typeof window !== "undefined"
+          ? `${pathname}${window.location.search}`
+          : pathname || "/";
+      router.push(loginWithNext(next));
       return null;
     }
     return {
@@ -58,7 +79,6 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
         if (!cancelled) {
           const next = buildCommentTree(flat);
           setTree(next);
-          // Auto-expand if there are comments
           if (countComments(next) > 0) setSectionOpen(true);
         }
       } catch {
@@ -74,9 +94,10 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
     };
   }, [answerId]);
 
-  async function handleTopLevel(body: string) {
-    const author = await requireAuthor();
-    if (!author) return;
+  /** @returns true if comment was saved */
+  async function handleTopLevel(body: string): Promise<boolean> {
+    const author = await requireAuthor(body, null);
+    if (!author) return false;
 
     await createComment({
       answerId,
@@ -88,11 +109,13 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
     await reload();
     setShowForm(false);
     setSectionOpen(true);
+    return true;
   }
 
-  async function handleReply(parentId: string, body: string) {
-    const author = await requireAuthor();
-    if (!author) return;
+  /** @returns true if reply was saved */
+  async function handleReply(parentId: string, body: string): Promise<boolean> {
+    const author = await requireAuthor(body, parentId);
+    if (!author) return false;
 
     await createComment({
       answerId,
@@ -103,6 +126,7 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
     });
     await reload();
     setSectionOpen(true);
+    return true;
   }
 
   const count = countComments(tree);
@@ -142,6 +166,7 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
         <div className="mt-2 animate-in fade-in">
           {showForm && (
             <CommentForm
+              draftKey={rootDraftKey}
               placeholder="Comment on this answer…"
               submitLabel="Comment"
               onCancel={() => setShowForm(false)}

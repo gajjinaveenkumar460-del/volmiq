@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
+import { loginWithNext } from "@/lib/auth/safeNextPath";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -13,6 +14,7 @@ import { createClient } from "@/lib/supabase/client";
  */
 export function AuthButton() {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -55,12 +57,13 @@ export function AuthButton() {
 
     return (
       <div className="flex items-center gap-2">
-        <span
-          className="inline-flex h-9 max-w-[7.5rem] items-center truncate rounded-full border border-[var(--line)] bg-[var(--purple-soft)]/60 px-3 text-[12px] font-semibold text-[var(--purple-deep)]"
-          title={user.email ?? undefined}
+        <Link
+          href="/my-questions"
+          className="inline-flex h-9 max-w-[7.5rem] items-center truncate rounded-full border border-[var(--line)] bg-[var(--purple-soft)]/60 px-3 text-[12px] font-semibold text-[var(--purple-deep)] no-underline transition hover:border-[var(--purple)]/40 hover:bg-[var(--purple-soft)]"
+          title="My questions"
         >
           @{username}
-        </span>
+        </Link>
         <button
           type="button"
           onClick={handleSignOut}
@@ -72,9 +75,12 @@ export function AuthButton() {
     );
   }
 
+  const signInHref =
+    pathname === "/login" ? "/login" : loginWithNext(pathname || "/");
+
   return (
     <Link
-      href="/login"
+      href={signInHref}
       className="inline-flex h-9 items-center justify-center rounded-full border border-[var(--purple)]/30 bg-white px-3.5 text-[12px] font-semibold tracking-wide text-[var(--purple)] no-underline transition hover:border-[var(--purple)] hover:bg-[var(--purple-soft)]"
     >
       Sign in

@@ -45,3 +45,10 @@ export type CreatePostInput = {
   authorName?: string;
   authorId?: string | null;
 };
+
+/** Payload for updating own post (author-only; RLS enforced) */
+export type UpdatePostInput = {
+  title: string;
+  body: string;
+  communitySlug: string;
+};

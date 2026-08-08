@@ -1,20 +1,27 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 type NavItem = {
   id: string;
   label: string;
   href: string;
-  active?: boolean;
   hint?: string;
 };
 
 const NAV: NavItem[] = [
-  { id: "home", label: "Home", href: "/", active: true, hint: "Feed" },
-  { id: "rooms", label: "Rooms", href: "#", hint: "Communities" },
-  { id: "pulse", label: "Pulse", href: "#", hint: "Trending" },
-  { id: "library", label: "Library", href: "#", hint: "Saved" },
+  { id: "home", label: "Home", href: "/", hint: "Feed" },
+  {
+    id: "my-questions",
+    label: "My questions",
+    href: "/my-questions",
+    hint: "Yours",
+  },
+  { id: "ask", label: "Ask", href: "/ask", hint: "New" },
 ];
 
 const NAV_META: NavItem[] = [
-  { id: "account", label: "Account", href: "#" },
   { id: "settings", label: "Settings", href: "#" },
 ];
 
@@ -24,6 +31,8 @@ type AppSidebarProps = {
 };
 
 export function AppSidebar({ className = "", onNavigate }: AppSidebarProps) {
+  const pathname = usePathname();
+
   return (
     <aside
       id="app-sidebar-mobile"
@@ -36,7 +45,12 @@ export function AppSidebar({ className = "", onNavigate }: AppSidebarProps) {
 
         <nav className="flex flex-col gap-0.5">
           {NAV.map((item) => (
-            <NavRow key={item.id} item={item} onNavigate={onNavigate} />
+            <NavRow
+              key={item.id}
+              item={item}
+              active={isActive(pathname, item.href)}
+              onNavigate={onNavigate}
+            />
           ))}
         </nav>
 
@@ -44,7 +58,13 @@ export function AppSidebar({ className = "", onNavigate }: AppSidebarProps) {
 
         <nav className="flex flex-col gap-0.5">
           {NAV_META.map((item) => (
-            <NavRow key={item.id} item={item} onNavigate={onNavigate} quiet />
+            <NavRow
+              key={item.id}
+              item={item}
+              active={false}
+              onNavigate={onNavigate}
+              quiet
+            />
           ))}
         </nav>
 
@@ -66,38 +86,63 @@ export function AppSidebar({ className = "", onNavigate }: AppSidebarProps) {
   );
 }
 
+function isActive(pathname: string, href: string): boolean {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 function NavRow({
   item,
+  active,
   onNavigate,
   quiet = false,
 }: {
   item: NavItem;
+  active: boolean;
   onNavigate?: () => void;
   quiet?: boolean;
 }) {
-  if (item.active) {
+  if (item.href === "#") {
     return (
-      <a
+      <span
+        className={`flex items-baseline justify-between rounded-xl px-3 py-2.5 ${
+          quiet ? "text-[var(--muted)]" : "text-[var(--ink)]"
+        }`}
+      >
+        <span
+          className={`text-[13px] tracking-tight ${quiet ? "font-medium" : "font-semibold"}`}
+        >
+          {item.label}
+        </span>
+      </span>
+    );
+  }
+
+  if (active) {
+    return (
+      <Link
         href={item.href}
         onClick={onNavigate}
-        className="relative flex items-baseline justify-between rounded-xl bg-[var(--purple-soft)] px-3 py-2.5 text-[var(--purple-deep)]"
+        className="relative flex items-baseline justify-between rounded-xl bg-[var(--purple-soft)] px-3 py-2.5 text-[var(--purple-deep)] no-underline"
       >
-        <span className="text-[13px] font-semibold tracking-tight">{item.label}</span>
+        <span className="text-[13px] font-semibold tracking-tight">
+          {item.label}
+        </span>
         {item.hint && (
           <span className="text-[10px] font-medium tracking-wide text-[var(--purple)]">
             {item.hint}
           </span>
         )}
         <span className="absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[var(--purple)]" />
-      </a>
+      </Link>
     );
   }
 
   return (
-    <a
+    <Link
       href={item.href}
       onClick={onNavigate}
-      className={`flex items-baseline justify-between rounded-xl px-3 py-2.5 transition hover:bg-[var(--purple-soft)]/50 ${
+      className={`flex items-baseline justify-between rounded-xl px-3 py-2.5 no-underline transition hover:bg-[var(--purple-soft)]/50 ${
         quiet ? "text-[var(--muted)]" : "text-[var(--ink)]"
       }`}
     >
@@ -111,6 +156,6 @@ function NavRow({
           {item.hint}
         </span>
       )}
-    </a>
+    </Link>
   );
 }

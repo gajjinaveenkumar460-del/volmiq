@@ -3,12 +3,20 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { safeNextPath } from "@/lib/auth/safeNextPath";
 import { createClient } from "@/lib/supabase/client";
 
 type Mode = "signin" | "signup";
 
-export function AuthForm() {
+type AuthFormProps = {
+  /** Return path after sign-in (already from ?next=) */
+  next?: string | null;
+};
+
+export function AuthForm({ next }: AuthFormProps) {
   const router = useRouter();
+  const returnTo = safeNextPath(next, "/");
+
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +39,7 @@ export function AuthForm() {
           email: trimmedEmail,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`,
           },
         });
         if (signUpError) throw signUpError;
@@ -45,7 +53,7 @@ export function AuthForm() {
           password,
         });
         if (signInError) throw signInError;
-        router.push("/");
+        router.push(returnTo);
         router.refresh();
       }
     } catch (err) {
@@ -69,6 +77,11 @@ export function AuthForm() {
             ? "Welcome back to Volmiq."
             : "Join with email and password."}
         </p>
+        {returnTo !== "/" && (
+          <p className="mt-2 text-[12px] text-[var(--purple)]">
+            After sign-in you’ll return to continue what you were writing.
+          </p>
+        )}
 
         <label className="mt-5 block text-[12px] font-semibold text-[var(--ink)]">
           Email

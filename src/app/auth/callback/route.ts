@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
+import { safeNextPath } from "@/lib/auth/safeNextPath";
 import { createClient } from "@/lib/supabase/server";
 
 /**
  * OAuth / email magic-link callback.
- * Exchanges ?code= for a session cookie, then redirects home.
+ * Exchanges ?code= for a session cookie, then redirects to a safe next path.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const next = safeNextPath(searchParams.get("next"), "/");
 
   if (code) {
     const supabase = await createClient();

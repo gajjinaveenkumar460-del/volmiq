@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { AuthButton } from "@/components/auth/AuthButton";
+import { HeaderSearch } from "@/components/layout/HeaderSearch";
 import Link from "next/link";
 
 type AppHeaderProps = {
@@ -44,21 +46,20 @@ export function AppHeader({
         <BrandLogo size={34} />
 
         {showSearch ? (
-          <div className="relative mx-auto min-w-0 max-w-md flex-1">
-            <label className="sr-only" htmlFor="vol-search">
-              Search
-            </label>
-            <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--paper)] px-3 py-2 transition focus-within:border-[var(--purple)] focus-within:ring-2 focus-within:ring-[var(--purple)]/15">
-              <SearchIcon className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
-              <input
-                id="vol-search"
-                type="search"
-                placeholder="Search Volmiq…"
-                autoComplete="off"
-                className="w-full bg-transparent text-[13px] font-medium tracking-wide text-[var(--ink)] outline-none placeholder:text-[var(--muted)]/70"
-              />
-            </div>
-          </div>
+          <Suspense
+            fallback={
+              <div className="relative mx-auto min-w-0 max-w-md flex-1">
+                <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--paper)] px-3 py-2">
+                  <span className="h-3.5 w-3.5 shrink-0" />
+                  <span className="text-[13px] text-[var(--muted)]/70">
+                    Search Volmiq…
+                  </span>
+                </div>
+              </div>
+            }
+          >
+            <HeaderSearch />
+          </Suspense>
         ) : (
           <div className="min-w-0 flex-1" />
         )}
@@ -111,20 +112,4 @@ function CloseIcon({ className }: { className?: string }) {
   );
 }
 
-function SearchIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <circle cx="11" cy="11" r="6.5" />
-      <path d="m16.5 16.5 3.5 3.5" />
-    </svg>
-  );
-}
+

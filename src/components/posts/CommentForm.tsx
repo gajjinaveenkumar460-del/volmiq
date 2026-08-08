@@ -1,13 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  clearDraft,
+  loadDraft,
+  saveDraft,
+  type BodyDraft,
+} from "@/lib/drafts";
 
 type CommentFormProps = {
   placeholder?: string;
   submitLabel?: string;
-  onSubmit: (body: string) => Promise<void>;
+  /**
+   * Return true only if the comment was actually posted.
+   * false = login redirect / cancelled — keep draft + text.
+   */
+  onSubmit: (body: string) => Promise<boolean>;
   onCancel?: () => void;
   compact?: boolean;
+  /** sessionStorage key — restores draft after login */
+  draftKey?: string;
 };
 
 export function CommentForm({
@@ -16,10 +28,21 @@ export function CommentForm({
   onSubmit,
   onCancel,
   compact = false,
+  draftKey,
 }: CommentFormProps) {
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
+
+  useEffect(() => {
+    if (!draftKey) return;
+    const draft = loadDraft<BodyDraft>(draftKey);
+    if (draft?.body) {
+      setBody(draft.body);
+      setRestored(true);
+    }
+  }, [draftKey]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,8 +55,15 @@ export function CommentForm({
     setSubmitting(true);
     setError(null);
     try {
-      await onSubmit(text);
-      setBody("");
+      if (draftKey) {
+        saveDraft(draftKey, { body: text });
+      }
+      const posted = await onSubmit(text);
+      if (posted) {
+        if (draftKey) clearDraft(draftKey);
+        setBody("");
+        setRestored(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to post comment");
     } finally {
@@ -43,6 +73,11 @@ export function CommentForm({
 
   return (
     <form onSubmit={handleSubmit} className={compact ? "mt-2" : "mt-3"}>
+      {restored && body && (
+        <p className="mb-1 text-[11px] font-medium text-[var(--purple)]">
+          Draft restored
+        </p>
+      )}
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}

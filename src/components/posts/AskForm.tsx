@@ -5,12 +5,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Community } from "@/types/community";
 import { displayNameFromUser } from "@/lib/auth/displayName";
+import { loginWithNext } from "@/lib/auth/safeNextPath";
+import {
+  clearDraft,
+  draftKeys,
+  loadDraft,
+  saveDraft,
+  type AskDraft,
+} from "@/lib/drafts";
 import { createClient } from "@/lib/supabase/client";
 import { getAllCommunities } from "@/lib/supabase/communities";
 import { createPost } from "@/lib/supabase/posts";
 
 export function AskForm() {
   const router = useRouter();
+  const askKey = draftKeys.ask();
 
   const [communities, setCommunities] = useState<Community[]>([]);
   const [title, setTitle] = useState("");
@@ -19,6 +28,31 @@ export function AskForm() {
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
+
+  // Restore draft once (client)
+  useEffect(() => {
+    const draft = loadDraft<AskDraft>(askKey);
+    if (!draft) {
+      setRestored(true);
+      return;
+    }
+    setTitle(draft.title ?? "");
+    setBody(draft.body ?? "");
+    if (draft.communitySlug) setCommunitySlug(draft.communitySlug);
+    setRestored(true);
+  }, [askKey]);
+
+  // Keep draft warm while typing (covers Sign in from header too)
+  useEffect(() => {
+    if (!restored) return;
+    if (!title.trim() && !body.trim()) return;
+    saveDraft(askKey, {
+      title,
+      body,
+      communitySlug,
+    } satisfies AskDraft);
+  }, [title, body, communitySlug, askKey, restored]);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,7 +63,10 @@ export function AskForm() {
         const list = await getAllCommunities();
         if (cancelled) return;
         setCommunities(list);
-        if (list[0]) setCommunitySlug(list[0].slug);
+        setCommunitySlug((prev) => {
+          if (prev && list.some((c) => c.slug === prev)) return prev;
+          return list[0]?.slug ?? "";
+        });
       } catch (e) {
         if (cancelled) return;
         setError(e instanceof Error ? e.message : "Failed to load rooms");
@@ -68,7 +105,12 @@ export function AskForm() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        router.push("/login");
+        saveDraft(askKey, {
+          title: trimmedTitle,
+          body: trimmedBody,
+          communitySlug,
+        } satisfies AskDraft);
+        router.push(loginWithNext("/ask"));
         return;
       }
 
@@ -80,6 +122,7 @@ export function AskForm() {
         authorId: user.id,
       });
 
+      clearDraft(askKey);
       setTitle("");
       setBody("");
       if (communities[0]) setCommunitySlug(communities[0].slug);
@@ -111,6 +154,11 @@ export function AskForm() {
         <p className="mt-1 text-[13px] text-[var(--muted)]">
           Pick a room and write a clear title so others can answer.
         </p>
+        {restored && (title || body) && (
+          <p className="mt-2 text-[12px] font-medium text-[var(--purple)]">
+            Draft restored — review and post when ready.
+          </p>
+        )}
 
         <label className="mt-5 block text-[12px] font-semibold text-[var(--ink)]">
           Room
