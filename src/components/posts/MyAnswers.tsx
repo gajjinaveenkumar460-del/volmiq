@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Answer } from "@/types/answer";
+import { AnswerListSkeleton } from "@/components/ui/Skeletons";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
 import { getAnswersByAuthorId } from "@/lib/supabase/answers";
@@ -51,6 +52,8 @@ export function MyAnswers() {
     };
   }, [user, authLoading, router]);
 
+  const showSkeleton = authLoading || loading;
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-3">
       <div className="mb-1">
@@ -77,15 +80,13 @@ export function MyAnswers() {
         </div>
       </div>
 
-      {(authLoading || loading) && (
-        <p className="text-sm text-[var(--muted)]">Loading your answers…</p>
-      )}
-
       {error && (
         <p className="text-sm text-red-600">Could not load: {error}</p>
       )}
 
-      {!authLoading && !loading && !error && answers.length === 0 && (
+      {showSkeleton && <AnswerListSkeleton count={3} />}
+
+      {!showSkeleton && !error && answers.length === 0 && (
         <div className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm shadow-[var(--purple)]/5">
           <p className="text-sm text-[var(--muted)]">
             You haven’t answered any questions yet (or older answers have no
@@ -100,8 +101,7 @@ export function MyAnswers() {
         </div>
       )}
 
-      {!authLoading &&
-        !loading &&
+      {!showSkeleton &&
         !error &&
         answers.map((a) => (
           <article

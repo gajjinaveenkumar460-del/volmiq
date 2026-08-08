@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Post } from "@/types/post";
 import { PostCard } from "@/components/posts/PostCard";
+import { PostCardListSkeleton } from "@/components/ui/Skeletons";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
 import { getPostsByAuthorId } from "@/lib/supabase/posts";
@@ -52,6 +53,8 @@ export function MyQuestions() {
     };
   }, [user, authLoading, router]);
 
+  const showSkeleton = authLoading || loading;
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-3">
       <div className="mb-1">
@@ -78,15 +81,13 @@ export function MyQuestions() {
         </div>
       </div>
 
-      {(authLoading || loading) && (
-        <p className="text-sm text-[var(--muted)]">Loading your questions…</p>
-      )}
-
       {error && (
         <p className="text-sm text-red-600">Could not load: {error}</p>
       )}
 
-      {!authLoading && !loading && !error && posts.length === 0 && (
+      {showSkeleton && <PostCardListSkeleton count={3} />}
+
+      {!showSkeleton && !error && posts.length === 0 && (
         <div className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm shadow-[var(--purple)]/5">
           <p className="text-sm text-[var(--muted)]">
             You haven’t posted any questions yet (or older posts have no
@@ -101,8 +102,7 @@ export function MyQuestions() {
         </div>
       )}
 
-      {!authLoading &&
-        !loading &&
+      {!showSkeleton &&
         !error &&
         posts.map((post) => <PostCard key={post.id} post={post} />)}
     </div>

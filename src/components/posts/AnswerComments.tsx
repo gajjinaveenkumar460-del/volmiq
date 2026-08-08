@@ -12,6 +12,7 @@ import {
   hasDraft,
   saveDraft,
 } from "@/lib/drafts";
+import { CommentsSkeleton } from "@/components/ui/Skeletons";
 import {
   buildCommentTree,
   createComment,
@@ -172,9 +173,7 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
           )}
 
           {loading ? (
-            <p className="mt-2 text-[12px] text-[var(--muted)]">
-              Loading comments…
-            </p>
+            <CommentsSkeleton />
           ) : tree.length === 0 ? (
             <p className="mt-2 text-[12px] text-[var(--muted)]">
               No comments yet. Correct mistakes or ask for clarity here.

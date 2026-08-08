@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { Post } from "@/types/post";
 import { PostCard } from "@/components/posts/PostCard";
+import { PostCardListSkeleton } from "@/components/ui/Skeletons";
 import { searchPosts } from "@/lib/supabase/posts";
 
 export function SearchResults() {
@@ -12,7 +13,7 @@ export function SearchResults() {
   const q = (searchParams.get("q") ?? "").trim();
 
   const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(q));
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -86,13 +87,11 @@ export function SearchResults() {
         )}
       </div>
 
-      {loading && (
-        <p className="text-sm text-[var(--muted)]">Searching…</p>
-      )}
-
       {error && (
         <p className="text-sm text-red-600">Could not search: {error}</p>
       )}
+
+      {loading && <PostCardListSkeleton count={3} />}
 
       {!loading && !error && posts.length === 0 && (
         <p className="text-sm text-[var(--muted)]">
