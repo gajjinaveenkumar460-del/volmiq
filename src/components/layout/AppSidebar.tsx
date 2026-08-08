@@ -27,10 +27,6 @@ const NAV: NavItem[] = [
   { id: "ask", label: "Ask", href: "/ask", hint: "New" },
 ];
 
-const NAV_META: NavItem[] = [
-  { id: "settings", label: "Settings", href: "#" },
-];
-
 type AppSidebarProps = {
   className?: string;
   onNavigate?: () => void;
@@ -56,20 +52,6 @@ export function AppSidebar({ className = "", onNavigate }: AppSidebarProps) {
               item={item}
               active={isActive(pathname, item.href)}
               onNavigate={onNavigate}
-            />
-          ))}
-        </nav>
-
-        <div className="my-6 h-px bg-[var(--line)]" />
-
-        <nav className="flex flex-col gap-0.5">
-          {NAV_META.map((item) => (
-            <NavRow
-              key={item.id}
-              item={item}
-              active={false}
-              onNavigate={onNavigate}
-              quiet
             />
           ))}
         </nav>
@@ -101,29 +83,11 @@ function NavRow({
   item,
   active,
   onNavigate,
-  quiet = false,
 }: {
   item: NavItem;
   active: boolean;
   onNavigate?: () => void;
-  quiet?: boolean;
 }) {
-  if (item.href === "#") {
-    return (
-      <span
-        className={`flex items-baseline justify-between rounded-xl px-3 py-2.5 ${
-          quiet ? "text-[var(--muted)]" : "text-[var(--ink)]"
-        }`}
-      >
-        <span
-          className={`text-[13px] tracking-tight ${quiet ? "font-medium" : "font-semibold"}`}
-        >
-          {item.label}
-        </span>
-      </span>
-    );
-  }
-
   if (active) {
     return (
       <Link
@@ -148,13 +112,9 @@ function NavRow({
     <Link
       href={item.href}
       onClick={onNavigate}
-      className={`flex items-baseline justify-between rounded-xl px-3 py-2.5 no-underline transition hover:bg-[var(--purple-soft)]/50 ${
-        quiet ? "text-[var(--muted)]" : "text-[var(--ink)]"
-      }`}
+      className="flex items-baseline justify-between rounded-xl px-3 py-2.5 text-[var(--ink)] no-underline transition hover:bg-[var(--purple-soft)]/50"
     >
-      <span
-        className={`text-[13px] tracking-tight ${quiet ? "font-medium" : "font-semibold"}`}
-      >
+      <span className="text-[13px] font-semibold tracking-tight">
         {item.label}
       </span>
       {item.hint && (

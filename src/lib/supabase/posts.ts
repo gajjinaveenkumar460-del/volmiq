@@ -8,10 +8,14 @@ import type {
 import { supabase } from "@/lib/supabase/client";
 import { mapDbPost, mapDbPosts } from "@/lib/supabase/mappers/posts";
 
-/** Embed answers + comment counts for feed cards */
+/**
+ * Embed answers + comment counts for feed cards.
+ * Disambiguate FK: answers.post_id → posts.id
+ * (posts.accepted_answer_id also links posts ↔ answers).
+ */
 const POST_SELECT_WITH_COUNTS = `
   *,
-  answers (
+  answers!post_id (
     comments (count)
   )
 `;

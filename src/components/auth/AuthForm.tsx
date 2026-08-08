@@ -53,6 +53,7 @@ export function AuthForm({ next }: AuthFormProps) {
           password,
         });
         if (signInError) throw signInError;
+        // Session cookie + AuthProvider onAuthStateChange pick up the user
         router.push(returnTo);
         router.refresh();
       }
