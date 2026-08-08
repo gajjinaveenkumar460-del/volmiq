@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Community } from "@/types/community";
+import { displayNameFromUser } from "@/lib/auth/displayName";
+import { createClient } from "@/lib/supabase/client";
 import { getAllCommunities } from "@/lib/supabase/communities";
 import { createPost } from "@/lib/supabase/posts";
 
@@ -60,11 +62,21 @@ export function AskForm() {
     setError(null);
 
     try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
       const created = await createPost({
         title: trimmedTitle,
         body: trimmedBody,
         communitySlug,
-        authorName: "You",
+        authorName: displayNameFromUser(user),
       });
 
       setTitle("");

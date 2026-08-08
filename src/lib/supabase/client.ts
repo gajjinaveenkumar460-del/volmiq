@@ -1,7 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-/** Prefer classic anon JWT; fall back to newer publishable key name */
 const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -13,6 +12,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 /**
- * Browser / client-component Supabase client (anon / publishable key).
+ * Browser client for Client Components (uses cookies via @supabase/ssr).
+ * Call createClient() in components when you need a fresh instance;
+ * `supabase` is a shared browser client for existing data helpers.
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export function createClient() {
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+}
+
+/** Shared browser client — keeps current imports working */
+export const supabase = createClient();

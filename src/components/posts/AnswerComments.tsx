@@ -4,22 +4,38 @@ import { useCallback, useEffect, useState } from "react";
 import type { Comment } from "@/types/comment";
 import { CommentForm } from "@/components/posts/CommentForm";
 import { CommentItem } from "@/components/posts/CommentItem";
+import { displayNameFromUser } from "@/lib/auth/displayName";
+import { createClient } from "@/lib/supabase/client";
 import {
   buildCommentTree,
   createComment,
   getCommentsByAnswerId,
 } from "@/lib/supabase/comments";
+import { useRouter } from "next/navigation";
 
 type AnswerCommentsProps = {
   answerId: string;
 };
 
 export function AnswerComments({ answerId }: AnswerCommentsProps) {
+  const router = useRouter();
   const [tree, setTree] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   /** Whole comment section under an answer */
   const [sectionOpen, setSectionOpen] = useState(false);
+
+  async function requireAuthorName(): Promise<string | null> {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      router.push("/login");
+      return null;
+    }
+    return displayNameFromUser(user);
+  }
 
   const reload = useCallback(async () => {
     const flat = await getCommentsByAnswerId(answerId);
@@ -53,11 +69,14 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
   }, [answerId]);
 
   async function handleTopLevel(body: string) {
+    const authorName = await requireAuthorName();
+    if (!authorName) return;
+
     await createComment({
       answerId,
       parentId: null,
       body,
-      authorName: "You",
+      authorName,
     });
     await reload();
     setShowForm(false);
@@ -65,11 +84,14 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
   }
 
   async function handleReply(parentId: string, body: string) {
+    const authorName = await requireAuthorName();
+    if (!authorName) return;
+
     await createComment({
       answerId,
       parentId,
       body,
-      authorName: "You",
+      authorName,
     });
     await reload();
     setSectionOpen(true);

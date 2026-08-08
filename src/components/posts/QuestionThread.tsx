@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Answer } from "@/types/answer";
 import { AnswerForm } from "@/components/posts/AnswerForm";
 import { AnswerComments } from "@/components/posts/AnswerComments";
+import { displayNameFromUser } from "@/lib/auth/displayName";
 import { createAnswer } from "@/lib/supabase/answers";
+import { createClient } from "@/lib/supabase/client";
 
 type QuestionThreadProps = {
   postId: string;
@@ -18,13 +21,24 @@ export function QuestionThread({
   postId,
   initialAnswers,
 }: QuestionThreadProps) {
+  const router = useRouter();
   const [answers, setAnswers] = useState<Answer[]>(initialAnswers);
 
   async function handleAddAnswer(text: string) {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
     const created = await createAnswer({
       postId,
       body: text,
-      authorName: "You",
+      authorName: displayNameFromUser(user),
     });
     setAnswers((prev) => [...prev, created]);
   }
