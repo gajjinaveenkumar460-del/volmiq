@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MyVote, VoteTargetType } from "@/types/vote";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
 import { castVote, getMyVote } from "@/lib/supabase/votes";
-import { createClient } from "@/lib/supabase/client";
 
 type VoteButtonsProps = {
   targetType: VoteTargetType;
@@ -27,6 +27,7 @@ export function VoteButtons({
   onScoreChange,
 }: VoteButtonsProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [score, setScore] = useState(initialScore);
   const [myVote, setMyVote] = useState<MyVote>(0);
   const [busy, setBusy] = useState(false);
@@ -39,6 +40,10 @@ export function VoteButtons({
     let cancelled = false;
 
     async function loadMine() {
+      if (!user) {
+        if (!cancelled) setMyVote(0);
+        return;
+      }
       try {
         const v = await getMyVote(targetType, targetId);
         if (!cancelled) setMyVote(v);
@@ -51,17 +56,12 @@ export function VoteButtons({
     return () => {
       cancelled = true;
     };
-  }, [targetType, targetId]);
+  }, [targetType, targetId, user]);
 
   async function handleVote(value: 1 | -1, e?: React.MouseEvent) {
     e?.preventDefault();
     e?.stopPropagation();
     if (busy) return;
-
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     if (!user) {
       const next =

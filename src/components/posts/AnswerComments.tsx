@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Comment } from "@/types/comment";
 import { CommentForm } from "@/components/posts/CommentForm";
 import { CommentItem } from "@/components/posts/CommentItem";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { displayNameFromUser } from "@/lib/auth/displayName";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
 import {
@@ -11,7 +12,6 @@ import {
   hasDraft,
   saveDraft,
 } from "@/lib/drafts";
-import { createClient } from "@/lib/supabase/client";
 import {
   buildCommentTree,
   createComment,
@@ -26,6 +26,7 @@ type AnswerCommentsProps = {
 export function AnswerComments({ answerId }: AnswerCommentsProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuth();
   const rootDraftKey = draftKeys.comment(answerId, null);
 
   const [tree, setTree] = useState<Comment[]>([]);
@@ -42,11 +43,7 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
     }
   }, [rootDraftKey]);
 
-  async function requireAuthor(bodyForDraft: string, parentId: string | null) {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  function requireAuthor(bodyForDraft: string, parentId: string | null) {
     if (!user) {
       saveDraft(draftKeys.comment(answerId, parentId), {
         body: bodyForDraft,
@@ -190,6 +187,7 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
                   comment={c}
                   answerId={answerId}
                   onReply={handleReply}
+                  onChanged={reload}
                 />
               ))}
             </div>

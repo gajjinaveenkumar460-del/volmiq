@@ -4,28 +4,30 @@ import { useEffect, useState } from "react";
 import type { Comment } from "@/types/comment";
 import { CommentForm } from "@/components/posts/CommentForm";
 import { VoteButtons } from "@/components/posts/VoteButtons";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { draftKeys, hasDraft } from "@/lib/drafts";
+import { deleteComment, updateComment } from "@/lib/supabase/comments";
 
 type CommentItemProps = {
   comment: Comment;
   answerId: string;
   depth?: number;
   onReply: (parentId: string, body: string) => Promise<boolean>;
+  /** Parent reloads tree after edit/delete */
+  onChanged: () => Promise<void> | void;
 };
 
 const MAX_REPLY_DEPTH = 4;
 
 /**
- * Thread UI (completely different approach):
- * - Parent list owns ONE continuous vertical spine (2px, rounded ends)
- * - Each child only adds a short horizontal stub into the comment
- * - Soft rounded join at the L using a small corner piece (no SVG paths)
+ * Thread UI with owner edit/delete on comments.
  */
 export function CommentItem({
   comment,
   answerId,
   depth = 0,
   onReply,
+  onChanged,
 }: CommentItemProps) {
   const replyDraftKey = draftKeys.comment(answerId, comment.id);
   const [showReply, setShowReply] = useState(false);
@@ -49,6 +51,7 @@ export function CommentItem({
         childrenOpen={childrenOpen}
         setChildrenOpen={setChildrenOpen}
         onReply={onReply}
+        onChanged={onChanged}
         replyDraftKey={replyDraftKey}
       />
 
@@ -83,6 +86,7 @@ export function CommentItem({
                   answerId={answerId}
                   depth={depth + 1}
                   onReply={onReply}
+                  onChanged={onChanged}
                 />
               </li>
             ))}
@@ -102,6 +106,7 @@ function CommentBody({
   childrenOpen,
   setChildrenOpen,
   onReply,
+  onChanged,
   replyDraftKey,
 }: {
   comment: Comment;
@@ -112,48 +117,160 @@ function CommentBody({
   childrenOpen: boolean;
   setChildrenOpen: (v: boolean | ((p: boolean) => boolean)) => void;
   onReply: (parentId: string, body: string) => Promise<boolean>;
+  onChanged: () => Promise<void> | void;
   replyDraftKey: string;
 }) {
+  const { user } = useAuth();
+  const isOwner = Boolean(
+    user && comment.authorId && user.id === comment.authorId,
+  );
+
+  const [editing, setEditing] = useState(false);
+  const [body, setBody] = useState(comment.body);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function startEdit() {
+    setBody(comment.body);
+    setError(null);
+    setEditing(true);
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    const text = body.trim();
+    if (!text) {
+      alert("Please write a comment first.");
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    try {
+      await updateComment(comment.id, { body: text });
+      setEditing(false);
+      await onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDelete() {
+    const ok = window.confirm(
+      "Delete this comment? Replies under it may also be removed.",
+    );
+    if (!ok) return;
+
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteComment(comment.id);
+      await onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete");
+      setBusy(false);
+    }
+  }
+
   return (
     <>
-      <p className="text-[11px] text-[var(--muted)]">
-        {comment.authorName} · {comment.createdAt}
-      </p>
-      <p className="mt-1 text-[13px] leading-relaxed text-[var(--ink)]">
-        {comment.body}
-      </p>
-      <div className="mt-1.5 flex flex-wrap items-center gap-3">
-        <VoteButtons
-          targetType="comment"
-          targetId={comment.id}
-          initialScore={comment.upvotes}
-          variant="inline"
-        />
-        {canReply && (
-          <button
-            type="button"
-            onClick={() => setShowReply((v) => !v)}
-            className="text-[11px] font-semibold text-[var(--muted)] transition hover:text-[var(--purple)]"
-          >
-            {showReply ? "Cancel" : "Reply"}
-          </button>
-        )}
-        {hasChildren && (
-          <button
-            type="button"
-            onClick={() => setChildrenOpen((v) => !v)}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--purple)] transition hover:text-[var(--purple-deep)]"
-            aria-expanded={childrenOpen}
-          >
-            <ChevronTiny
-              className={`h-3 w-3 transition-transform ${childrenOpen ? "rotate-90" : ""}`}
-            />
-            {childrenOpen
-              ? "Collapse"
-              : `Expand ${comment.children!.length} ${comment.children!.length === 1 ? "reply" : "replies"}`}
-          </button>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p className="text-[11px] text-[var(--muted)]">
+          {comment.authorName} · {comment.createdAt}
+        </p>
+        {isOwner && !editing && (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={startEdit}
+              disabled={busy}
+              className="text-[11px] font-semibold text-[var(--muted)] transition hover:text-[var(--purple)] disabled:opacity-60"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={busy}
+              className="text-[11px] font-semibold text-red-600 transition hover:text-red-700 disabled:opacity-60"
+            >
+              Delete
+            </button>
+          </div>
         )}
       </div>
+
+      {!editing ? (
+        <p className="mt-1 text-[13px] leading-relaxed whitespace-pre-wrap text-[var(--ink)]">
+          {comment.body}
+        </p>
+      ) : (
+        <form onSubmit={handleSave} className="mt-1">
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            disabled={busy}
+            rows={2}
+            className="w-full resize-y rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[13px] text-[var(--ink)] outline-none focus:border-[var(--purple)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60"
+          />
+          <div className="mt-1.5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              disabled={busy}
+              className="text-[11px] font-semibold text-[var(--muted)]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={busy}
+              className="rounded-full bg-[var(--purple)] px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-60"
+            >
+              {busy ? "…" : "Save"}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {error && <p className="mt-1 text-[11px] text-red-600">{error}</p>}
+
+      {!editing && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-3">
+          <VoteButtons
+            targetType="comment"
+            targetId={comment.id}
+            initialScore={comment.upvotes}
+            variant="inline"
+          />
+          {canReply && (
+            <button
+              type="button"
+              onClick={() => setShowReply((v) => !v)}
+              className="text-[11px] font-semibold text-[var(--muted)] transition hover:text-[var(--purple)]"
+            >
+              {showReply ? "Cancel" : "Reply"}
+            </button>
+          )}
+          {hasChildren && (
+            <button
+              type="button"
+              onClick={() => setChildrenOpen((v) => !v)}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--purple)] transition hover:text-[var(--purple-deep)]"
+              aria-expanded={childrenOpen}
+            >
+              <ChevronTiny
+                className={`h-3 w-3 transition-transform ${childrenOpen ? "rotate-90" : ""}`}
+              />
+              {childrenOpen
+                ? "Collapse"
+                : `Expand ${comment.children!.length} ${comment.children!.length === 1 ? "reply" : "replies"}`}
+            </button>
+          )}
+        </div>
+      )}
 
       {showReply && (
         <CommentForm
@@ -162,8 +279,8 @@ function CommentBody({
           placeholder="Write a reply…"
           submitLabel="Reply"
           onCancel={() => setShowReply(false)}
-          onSubmit={async (body) => {
-            const posted = await onReply(comment.id, body);
+          onSubmit={async (text) => {
+            const posted = await onReply(comment.id, text);
             if (posted) setShowReply(false);
             return posted;
           }}

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Community } from "@/types/community";
 import type { Post } from "@/types/post";
 import { VoteButtons } from "@/components/posts/VoteButtons";
-import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { deletePost, updatePost } from "@/lib/supabase/posts";
 
 type PostDetailCardProps = {
@@ -24,30 +24,17 @@ export function PostDetailCard({
   communities,
 }: PostDetailCardProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [post, setPost] = useState(initialPost);
-  const [isOwner, setIsOwner] = useState(false);
+  const isOwner = Boolean(
+    user && post.authorId && user.id === post.authorId,
+  );
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(initialPost.title);
   const [body, setBody] = useState(initialPost.body);
   const [communitySlug, setCommunitySlug] = useState(initialPost.communitySlug);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function checkOwner() {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (cancelled) return;
-      setIsOwner(Boolean(user && post.authorId && user.id === post.authorId));
-    }
-    checkOwner();
-    return () => {
-      cancelled = true;
-    };
-  }, [post.authorId]);
 
   const communityName =
     communities.find((c) => c.slug === post.communitySlug)?.name ??

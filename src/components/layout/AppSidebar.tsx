@@ -18,6 +18,12 @@ const NAV: NavItem[] = [
     href: "/my-questions",
     hint: "Yours",
   },
+  {
+    id: "my-answers",
+    label: "My answers",
+    href: "/my-answers",
+    hint: "Yours",
+  },
   { id: "ask", label: "Ask", href: "/ask", hint: "New" },
 ];
 

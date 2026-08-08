@@ -63,6 +63,8 @@ export default async function PostDetailPage({ params }: PageProps) {
 
         <QuestionThread
           postId={post.id}
+          postAuthorId={post.authorId}
+          initialAcceptedAnswerId={post.acceptedAnswerId}
           initialAnswers={initialAnswers}
         />
       </div>

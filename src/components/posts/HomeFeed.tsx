@@ -5,10 +5,11 @@ import type { Community } from "@/types/community";
 import type { Post } from "@/types/post";
 import { PostCard } from "@/components/posts/PostCard";
 import { getAllCommunities } from "@/lib/supabase/communities";
-import { getAllPosts } from "@/lib/supabase/posts";
+import { getAllPosts, type FeedSort } from "@/lib/supabase/posts";
 
 export function HomeFeed() {
   const [selectedCommunity, setSelectedCommunity] = useState<string>("all");
+  const [sort, setSort] = useState<FeedSort>("hot");
   const [communities, setCommunities] = useState<Community[]>([]);
   const [dbPosts, setDbPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +24,7 @@ export function HomeFeed() {
 
       try {
         const [postsList, communitiesList] = await Promise.all([
-          getAllPosts(),
+          getAllPosts(sort),
           getAllCommunities(),
         ]);
         if (cancelled) return;
@@ -43,7 +44,7 @@ export function HomeFeed() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [sort]);
 
   const visiblePosts =
     selectedCommunity === "all"
@@ -52,33 +53,60 @@ export function HomeFeed() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-3">
-      <div className="mb-1 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setSelectedCommunity("all")}
-          className={
-            selectedCommunity === "all"
-              ? "rounded-full bg-[var(--purple)] px-3 py-1.5 text-[12px] font-semibold text-white"
-              : "rounded-full bg-[var(--purple-soft)] px-3 py-1.5 text-[12px] font-semibold text-[var(--purple)]"
-          }
-        >
-          All
-        </button>
-
-        {communities.map((c) => (
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
-            key={c.id}
             type="button"
-            onClick={() => setSelectedCommunity(c.slug)}
+            onClick={() => setSelectedCommunity("all")}
             className={
-              selectedCommunity === c.slug
+              selectedCommunity === "all"
                 ? "rounded-full bg-[var(--purple)] px-3 py-1.5 text-[12px] font-semibold text-white"
                 : "rounded-full bg-[var(--purple-soft)] px-3 py-1.5 text-[12px] font-semibold text-[var(--purple)]"
             }
           >
-            {c.name}
+            All
           </button>
-        ))}
+
+          {communities.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setSelectedCommunity(c.slug)}
+              className={
+                selectedCommunity === c.slug
+                  ? "rounded-full bg-[var(--purple)] px-3 py-1.5 text-[12px] font-semibold text-white"
+                  : "rounded-full bg-[var(--purple-soft)] px-3 py-1.5 text-[12px] font-semibold text-[var(--purple)]"
+              }
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-1 rounded-full border border-[var(--line)] bg-white p-0.5">
+          <button
+            type="button"
+            onClick={() => setSort("hot")}
+            className={
+              sort === "hot"
+                ? "rounded-full bg-[var(--purple)] px-3 py-1 text-[11px] font-semibold text-white"
+                : "rounded-full px-3 py-1 text-[11px] font-semibold text-[var(--muted)] hover:text-[var(--purple)]"
+            }
+          >
+            Hot
+          </button>
+          <button
+            type="button"
+            onClick={() => setSort("new")}
+            className={
+              sort === "new"
+                ? "rounded-full bg-[var(--purple)] px-3 py-1 text-[11px] font-semibold text-white"
+                : "rounded-full px-3 py-1 text-[11px] font-semibold text-[var(--muted)] hover:text-[var(--purple)]"
+            }
+          >
+            New
+          </button>
+        </div>
       </div>
 
       {loading && (
@@ -94,6 +122,7 @@ export function HomeFeed() {
       )}
 
       {!loading &&
+        !error &&
         visiblePosts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Community } from "@/types/community";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { displayNameFromUser } from "@/lib/auth/displayName";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
 import {
@@ -13,12 +14,12 @@ import {
   saveDraft,
   type AskDraft,
 } from "@/lib/drafts";
-import { createClient } from "@/lib/supabase/client";
 import { getAllCommunities } from "@/lib/supabase/communities";
 import { createPost } from "@/lib/supabase/posts";
 
 export function AskForm() {
   const router = useRouter();
+  const { user } = useAuth();
   const askKey = draftKeys.ask();
 
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -99,11 +100,6 @@ export function AskForm() {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
       if (!user) {
         saveDraft(askKey, {
           title: trimmedTitle,

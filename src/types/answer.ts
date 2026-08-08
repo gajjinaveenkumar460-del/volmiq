@@ -26,3 +26,8 @@ export type CreateAnswerInput = {
   authorName?: string;
   authorId?: string | null;
 };
+
+/** Payload for updating own answer */
+export type UpdateAnswerInput = {
+  body: string;
+};

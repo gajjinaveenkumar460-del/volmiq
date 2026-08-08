@@ -29,3 +29,7 @@ export type CreateCommentInput = {
   authorName?: string;
   authorId?: string | null;
 };
+
+export type UpdateCommentInput = {
+  body: string;
+};

@@ -2,6 +2,7 @@ import type {
   Comment,
   CommentRow,
   CreateCommentInput,
+  UpdateCommentInput,
 } from "@/types/comment";
 import { supabase } from "@/lib/supabase/client";
 import { mapDbComment, mapDbComments } from "@/lib/supabase/mappers/comments";
@@ -70,6 +71,57 @@ export async function createComment(
   }
 
   return mapDbComment(data as CommentRow);
+}
+
+/**
+ * Update own comment body. RLS: author_id = auth.uid().
+ */
+export async function updateComment(
+  id: string,
+  input: UpdateCommentInput,
+): Promise<Comment> {
+  const body = input.body.trim();
+  if (!body) {
+    throw new Error("Comment cannot be empty");
+  }
+
+  const { data, error } = await supabase
+    .from("comments")
+    .update({ body })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return mapDbComment(data as CommentRow);
+}
+
+/**
+ * Delete own comment. Uses delete_own_comment RPC when present.
+ */
+export async function deleteComment(id: string): Promise<void> {
+  const rpc = await supabase.rpc("delete_own_comment", { p_comment_id: id });
+
+  if (!rpc.error) return;
+
+  const missingFn =
+    rpc.error.code === "PGRST202" ||
+    /function .*delete_own_comment/i.test(rpc.error.message) ||
+    /could not find/i.test(rpc.error.message);
+
+  if (!missingFn) {
+    throw new Error(rpc.error.message);
+  }
+
+  const { error } = await supabase.from("comments").delete().eq("id", id);
+  if (error) {
+    throw new Error(
+      `${error.message} — If this comment has replies, run the delete_own_comment SQL in Supabase.`,
+    );
+  }
 }
 
 /**

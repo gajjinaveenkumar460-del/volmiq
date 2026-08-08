@@ -9,6 +9,8 @@ export type Post = {
   authorId?: string | null;
   createdAt: string;
   upvotes: number;
+  /** Accepted answer id (question author chose) */
+  acceptedAnswerId?: string | null;
   /** Number of answers on this question (from DB aggregate) */
   answerCount?: number;
   /** Number of comments across all answers (from DB aggregate) */
@@ -24,6 +26,7 @@ export type PostRow = {
   author_name: string;
   author_id?: string | null;
   upvotes: number;
+  accepted_answer_id?: string | null;
   created_at: string;
 };
 

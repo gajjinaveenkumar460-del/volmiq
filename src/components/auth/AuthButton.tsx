@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
-import { createClient } from "@/lib/supabase/client";
 
 /**
  * Header auth cluster (after Ask):
@@ -15,30 +13,10 @@ import { createClient } from "@/lib/supabase/client";
 export function AuthButton() {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { user, loading, signOut } = useAuth();
 
   async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setUser(null);
+    await signOut();
     router.push("/");
     router.refresh();
   }

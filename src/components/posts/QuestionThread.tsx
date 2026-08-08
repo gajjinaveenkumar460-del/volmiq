@@ -4,22 +4,31 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Answer } from "@/types/answer";
 import { AnswerForm } from "@/components/posts/AnswerForm";
-import { AnswerComments } from "@/components/posts/AnswerComments";
-import { VoteButtons } from "@/components/posts/VoteButtons";
+import { AnswerItem } from "@/components/posts/AnswerItem";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { displayNameFromUser } from "@/lib/auth/displayName";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
 import { draftKeys, saveDraft } from "@/lib/drafts";
 import { createAnswer } from "@/lib/supabase/answers";
-import { createClient } from "@/lib/supabase/client";
+import { setAcceptedAnswer } from "@/lib/supabase/posts";
 
 type QuestionThreadProps = {
   postId: string;
+  postAuthorId?: string | null;
+  initialAcceptedAnswerId?: string | null;
   initialAnswers: Answer[];
 };
 
-/** Highest score first; newer first when scores match. */
-function sortAnswersByScore(list: Answer[]): Answer[] {
+/** Accepted first, then highest score; newer first on ties. */
+function sortAnswers(
+  list: Answer[],
+  acceptedId: string | null | undefined,
+): Answer[] {
   return [...list].sort((a, b) => {
+    if (acceptedId) {
+      if (a.id === acceptedId && b.id !== acceptedId) return -1;
+      if (b.id === acceptedId && a.id !== acceptedId) return 1;
+    }
     if (b.upvotes !== a.upvotes) return b.upvotes - a.upvotes;
     return b.createdAt.localeCompare(a.createdAt);
   });
@@ -27,24 +36,28 @@ function sortAnswersByScore(list: Answer[]): Answer[] {
 
 /**
  * Answers list + write-answer form + nested comments under each answer.
- * Answers stay ordered by score (updates live after votes).
  */
 export function QuestionThread({
   postId,
+  postAuthorId,
+  initialAcceptedAnswerId = null,
   initialAnswers,
 }: QuestionThreadProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  const [acceptedAnswerId, setAcceptedId] = useState<string | null>(
+    initialAcceptedAnswerId ?? null,
+  );
   const [answers, setAnswers] = useState<Answer[]>(() =>
-    sortAnswersByScore(initialAnswers),
+    sortAnswers(initialAnswers, initialAcceptedAnswerId),
+  );
+
+  const canAccept = Boolean(
+    user && postAuthorId && user.id === postAuthorId,
   );
 
   /** @returns true if answer was saved to DB */
   async function handleAddAnswer(text: string): Promise<boolean> {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
     if (!user) {
       saveDraft(draftKeys.answer(postId), { body: text });
       router.push(loginWithNext(`/p/${postId}`));
@@ -57,16 +70,39 @@ export function QuestionThread({
       authorName: displayNameFromUser(user),
       authorId: user.id,
     });
-    setAnswers((prev) => sortAnswersByScore([...prev, created]));
+    setAnswers((prev) => sortAnswers([...prev, created], acceptedAnswerId));
     return true;
   }
 
   function handleAnswerScoreChange(answerId: string, score: number) {
     setAnswers((prev) =>
-      sortAnswersByScore(
+      sortAnswers(
         prev.map((a) => (a.id === answerId ? { ...a, upvotes: score } : a)),
+        acceptedAnswerId,
       ),
     );
+  }
+
+  function handleAnswerUpdated(updated: Answer) {
+    setAnswers((prev) =>
+      sortAnswers(
+        prev.map((a) => (a.id === updated.id ? { ...a, ...updated } : a)),
+        acceptedAnswerId,
+      ),
+    );
+  }
+
+  function handleAnswerDeleted(answerId: string) {
+    setAnswers((prev) => prev.filter((a) => a.id !== answerId));
+    if (acceptedAnswerId === answerId) setAcceptedId(null);
+  }
+
+  async function handleToggleAccept(answerId: string) {
+    const next = acceptedAnswerId === answerId ? null : answerId;
+    const updated = await setAcceptedAnswer(postId, next);
+    const id = updated.acceptedAnswerId ?? next;
+    setAcceptedId(id);
+    setAnswers((prev) => sortAnswers(prev, id));
   }
 
   return (
@@ -80,36 +116,27 @@ export function QuestionThread({
             ({answers.length})
           </span>
         </h2>
+        {canAccept && answers.length > 0 && (
+          <p className="mt-1 text-[12px] text-[var(--muted)]">
+            You asked this — accept the best answer when ready.
+          </p>
+        )}
 
         {answers.length === 0 ? (
           <p className="mt-3 text-sm text-[var(--muted)]">No answers yet.</p>
         ) : (
           <ul className="mt-3 flex flex-col gap-3">
             {answers.map((a) => (
-              <li
+              <AnswerItem
                 key={a.id}
-                className="rounded-2xl border border-[var(--line)] bg-white p-4 shadow-sm shadow-[var(--purple)]/5"
-              >
-                <p className="text-[12px] text-[var(--muted)]">
-                  {a.authorName} · {a.createdAt}
-                </p>
-                <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink)]">
-                  {a.body}
-                </p>
-                <div className="mt-3">
-                  <VoteButtons
-                    targetType="answer"
-                    targetId={a.id}
-                    initialScore={a.upvotes}
-                    variant="inline"
-                    onScoreChange={(score) =>
-                      handleAnswerScoreChange(a.id, score)
-                    }
-                  />
-                </div>
-
-                <AnswerComments answerId={a.id} />
-              </li>
+                answer={a}
+                isAccepted={acceptedAnswerId === a.id}
+                canAccept={canAccept}
+                onUpdated={handleAnswerUpdated}
+                onDeleted={handleAnswerDeleted}
+                onScoreChange={handleAnswerScoreChange}
+                onToggleAccept={handleToggleAccept}
+              />
             ))}
           </ul>
         )}

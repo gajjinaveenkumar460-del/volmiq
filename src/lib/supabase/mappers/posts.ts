@@ -16,6 +16,7 @@ export function mapDbPost(row: PostRow | PostRowWithCounts): Post {
     authorId: row.author_id ?? null,
     createdAt: row.created_at.slice(0, 10),
     upvotes: row.upvotes ?? 0,
+    acceptedAnswerId: row.accepted_answer_id ?? null,
     answerCount,
     commentCount,
   };

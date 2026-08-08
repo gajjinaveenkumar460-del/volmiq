@@ -16,15 +16,25 @@ const POST_SELECT_WITH_COUNTS = `
   )
 `;
 
+export type FeedSort = "new" | "hot";
+
 /**
- * Fetch all questions from Supabase, newest first.
+ * Fetch all questions from Supabase.
+ * sort "new" = newest first; "hot" = highest score, then newest.
  * Includes answerCount and commentCount.
  */
-export async function getAllPosts(): Promise<Post[]> {
-  const { data, error } = await supabase
-    .from("posts")
-    .select(POST_SELECT_WITH_COUNTS)
-    .order("created_at", { ascending: false });
+export async function getAllPosts(sort: FeedSort = "new"): Promise<Post[]> {
+  let query = supabase.from("posts").select(POST_SELECT_WITH_COUNTS);
+
+  if (sort === "hot") {
+    query = query
+      .order("upvotes", { ascending: false })
+      .order("created_at", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
@@ -134,6 +144,32 @@ export async function deletePost(id: string): Promise<void> {
       `${error.message} — If this post has answers, run the delete_own_post SQL in Supabase.`,
     );
   }
+}
+
+/**
+ * Mark (or clear) the accepted answer on a question.
+ * Only the post author can update (RLS). answerId must belong to this post.
+ */
+export async function setAcceptedAnswer(
+  postId: string,
+  answerId: string | null,
+): Promise<Post> {
+  const { data, error } = await supabase
+    .from("posts")
+    .update({ accepted_answer_id: answerId })
+    .eq("id", postId)
+    .select(POST_SELECT_WITH_COUNTS)
+    .single();
+
+  if (error) {
+    throw new Error(
+      error.message.includes("accepted_answer_id")
+        ? `${error.message} — Run the accepted_answer_id SQL in Supabase.`
+        : error.message,
+    );
+  }
+
+  return mapDbPost(data as PostRowWithCounts);
 }
 
 /**
