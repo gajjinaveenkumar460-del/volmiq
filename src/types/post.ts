@@ -5,6 +5,8 @@ export type Post = {
   title: string;
   body: string;
   authorName: string;
+  /** Supabase Auth user id (null on older rows) */
+  authorId?: string | null;
   createdAt: string;
   upvotes: number;
   /** Number of answers on this question (from DB aggregate) */
@@ -20,6 +22,7 @@ export type PostRow = {
   title: string;
   body: string;
   author_name: string;
+  author_id?: string | null;
   upvotes: number;
   created_at: string;
 };
@@ -40,4 +43,5 @@ export type CreatePostInput = {
   body: string;
   communitySlug: string;
   authorName?: string;
+  authorId?: string | null;
 };

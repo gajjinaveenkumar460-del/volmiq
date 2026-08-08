@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Comment } from "@/types/comment";
 import { CommentForm } from "@/components/posts/CommentForm";
+import { VoteButtons } from "@/components/posts/VoteButtons";
 
 type CommentItemProps = {
   comment: Comment;
@@ -46,7 +47,6 @@ export function CommentItem({
 
       {hasChildren && childrenOpen && (
         <div className="relative mt-1 ml-2">
-          {/* Continuous straight spine for this whole group */}
           <span
             className="pointer-events-none absolute top-0 bottom-3 left-[7px] w-[2px] rounded-full bg-[var(--purple-soft)]"
             aria-hidden
@@ -55,21 +55,15 @@ export function CommentItem({
           <ul className="relative">
             {children.map((child, index) => (
               <li key={child.id} className="relative pl-5">
-                {/* Horizontal stub into this comment */}
                 <span
                   className="pointer-events-none absolute top-3 left-[7px] z-[1] h-[2px] w-[12px] bg-[var(--purple-soft)]"
                   aria-hidden
                 />
-                {/*
-                  Soft bend only at the joint (inner corner):
-                  small rounded L that sits on top of the straight lines
-                */}
                 <span
                   className="pointer-events-none absolute top-3 left-[7px] z-[2] h-[8px] w-[8px] -translate-y-[6px] rounded-bl-[7px] border-b-2 border-l-2 border-[var(--purple-soft)] bg-white"
                   aria-hidden
                 />
 
-                {/* Last item: hide spine below the stub so it ends cleanly */}
                 {index === children.length - 1 && (
                   <span
                     className="pointer-events-none absolute top-[14px] bottom-0 left-[6px] z-[1] w-[4px] bg-white"
@@ -120,9 +114,12 @@ function CommentBody({
         {comment.body}
       </p>
       <div className="mt-1.5 flex flex-wrap items-center gap-3">
-        <span className="text-[11px] font-semibold tabular-nums text-[var(--purple)]">
-          ↑ {comment.upvotes}
-        </span>
+        <VoteButtons
+          targetType="comment"
+          targetId={comment.id}
+          initialScore={comment.upvotes}
+          variant="inline"
+        />
         {canReply && (
           <button
             type="button"

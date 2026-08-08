@@ -25,7 +25,10 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
   /** Whole comment section under an answer */
   const [sectionOpen, setSectionOpen] = useState(false);
 
-  async function requireAuthorName(): Promise<string | null> {
+  async function requireAuthor(): Promise<{
+    authorName: string;
+    authorId: string;
+  } | null> {
     const supabase = createClient();
     const {
       data: { user },
@@ -34,7 +37,10 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
       router.push("/login");
       return null;
     }
-    return displayNameFromUser(user);
+    return {
+      authorName: displayNameFromUser(user),
+      authorId: user.id,
+    };
   }
 
   const reload = useCallback(async () => {
@@ -69,14 +75,15 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
   }, [answerId]);
 
   async function handleTopLevel(body: string) {
-    const authorName = await requireAuthorName();
-    if (!authorName) return;
+    const author = await requireAuthor();
+    if (!author) return;
 
     await createComment({
       answerId,
       parentId: null,
       body,
-      authorName,
+      authorName: author.authorName,
+      authorId: author.authorId,
     });
     await reload();
     setShowForm(false);
@@ -84,14 +91,15 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
   }
 
   async function handleReply(parentId: string, body: string) {
-    const authorName = await requireAuthorName();
-    if (!authorName) return;
+    const author = await requireAuthor();
+    if (!author) return;
 
     await createComment({
       answerId,
       parentId,
       body,
-      authorName,
+      authorName: author.authorName,
+      authorId: author.authorId,
     });
     await reload();
     setSectionOpen(true);

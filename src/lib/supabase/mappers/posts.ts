@@ -13,6 +13,7 @@ export function mapDbPost(row: PostRow | PostRowWithCounts): Post {
     title: row.title,
     body: row.body ?? "",
     authorName: row.author_name,
+    authorId: row.author_id ?? null,
     createdAt: row.created_at.slice(0, 10),
     upvotes: row.upvotes ?? 0,
     answerCount,

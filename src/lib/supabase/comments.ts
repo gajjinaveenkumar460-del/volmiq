@@ -59,6 +59,7 @@ export async function createComment(
       parent_id: input.parentId ?? null,
       body: input.body,
       author_name: input.authorName ?? "You",
+      author_id: input.authorId ?? null,
       upvotes: 0,
     })
     .select("*")

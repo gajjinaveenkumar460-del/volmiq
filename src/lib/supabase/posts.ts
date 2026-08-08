@@ -57,6 +57,7 @@ export async function createPost(input: CreatePostInput): Promise<Post> {
       body: input.body,
       community_slug: input.communitySlug,
       author_name: input.authorName ?? "You",
+      author_id: input.authorId ?? null,
       upvotes: 0,
     })
     .select("*")

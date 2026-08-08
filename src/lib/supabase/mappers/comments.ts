@@ -9,6 +9,7 @@ export function mapDbComment(row: CommentRow): Comment {
     answerId: row.answer_id,
     parentId: row.parent_id,
     authorName: row.author_name,
+    authorId: row.author_id ?? null,
     body: row.body ?? "",
     createdAt: row.created_at.slice(0, 10),
     upvotes: row.upvotes ?? 0,

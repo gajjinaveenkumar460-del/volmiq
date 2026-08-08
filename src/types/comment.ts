@@ -3,6 +3,8 @@ export type Comment = {
   answerId: string;
   parentId: string | null;
   authorName: string;
+  /** Supabase Auth user id (null on older rows) */
+  authorId?: string | null;
   body: string;
   createdAt: string;
   upvotes: number;
@@ -14,6 +16,7 @@ export type CommentRow = {
   answer_id: string;
   parent_id: string | null;
   author_name: string;
+  author_id?: string | null;
   body: string;
   created_at: string;
   upvotes: number;
@@ -24,4 +27,5 @@ export type CreateCommentInput = {
   parentId?: string | null; // null = on the answer
   body: string;
   authorName?: string;
+  authorId?: string | null;
 };

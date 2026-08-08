@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Answer } from "@/types/answer";
 import { AnswerForm } from "@/components/posts/AnswerForm";
 import { AnswerComments } from "@/components/posts/AnswerComments";
+import { VoteButtons } from "@/components/posts/VoteButtons";
 import { displayNameFromUser } from "@/lib/auth/displayName";
 import { createAnswer } from "@/lib/supabase/answers";
 import { createClient } from "@/lib/supabase/client";
@@ -39,6 +40,7 @@ export function QuestionThread({
       postId,
       body: text,
       authorName: displayNameFromUser(user),
+      authorId: user.id,
     });
     setAnswers((prev) => [...prev, created]);
   }
@@ -70,9 +72,14 @@ export function QuestionThread({
                 <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink)]">
                   {a.body}
                 </p>
-                <p className="mt-3 text-sm font-bold tabular-nums text-[var(--purple)]">
-                  ↑ {a.upvotes}
-                </p>
+                <div className="mt-3">
+                  <VoteButtons
+                    targetType="answer"
+                    targetId={a.id}
+                    initialScore={a.upvotes}
+                    variant="inline"
+                  />
+                </div>
 
                 <AnswerComments answerId={a.id} />
               </li>

@@ -29,6 +29,7 @@ export async function createAnswer(input: CreateAnswerInput): Promise<Answer> {
       post_id: input.postId,
       body: input.body,
       author_name: input.authorName ?? "You",
+      author_id: input.authorId ?? null,
       upvotes: 0,
     })
     .select("*")

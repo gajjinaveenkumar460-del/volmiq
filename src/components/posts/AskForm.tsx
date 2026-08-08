@@ -77,6 +77,7 @@ export function AskForm() {
         body: trimmedBody,
         communitySlug,
         authorName: displayNameFromUser(user),
+        authorId: user.id,
       });
 
       setTitle("");

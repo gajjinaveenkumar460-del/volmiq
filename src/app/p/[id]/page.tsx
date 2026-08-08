@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { QuestionThread } from "@/components/posts/QuestionThread";
+import { VoteButtons } from "@/components/posts/VoteButtons";
 import { getAllCommunities } from "@/lib/supabase/communities";
 import { getAnswersByPostId } from "@/lib/supabase/answers";
 import { getPostById } from "@/lib/supabase/posts";
@@ -78,9 +79,12 @@ export default async function PostDetailPage({ params }: PageProps) {
           </div>
 
           <div className="mt-6 flex items-center gap-4 border-t border-[var(--line)] pt-4">
-            <span className="text-sm font-bold tabular-nums text-[var(--purple)]">
-              ↑ {post.upvotes}
-            </span>
+            <VoteButtons
+              targetType="post"
+              targetId={post.id}
+              initialScore={post.upvotes}
+              variant="inline"
+            />
           </div>
         </article>
 
