@@ -1,30 +1,30 @@
 "use client";
 
+import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  IconAsk,
+  IconHome,
+  IconUser,
+} from "@/components/ui/Icons";
 
 type NavItem = {
   id: string;
   label: string;
   href: string;
-  hint?: string;
+  Icon: ComponentType<{ className?: string }>;
 };
 
 const NAV: NavItem[] = [
-  { id: "home", label: "Home", href: "/", hint: "Feed" },
+  { id: "home", label: "Home", href: "/", Icon: IconHome },
   {
-    id: "my-questions",
-    label: "My questions",
-    href: "/my-questions",
-    hint: "Yours",
+    id: "my",
+    label: "My activity",
+    href: "/my",
+    Icon: IconUser,
   },
-  {
-    id: "my-answers",
-    label: "My answers",
-    href: "/my-answers",
-    hint: "Yours",
-  },
-  { id: "ask", label: "Ask", href: "/ask", hint: "New" },
+  { id: "ask", label: "Ask", href: "/ask", Icon: IconAsk },
 ];
 
 type AppSidebarProps = {
@@ -32,20 +32,19 @@ type AppSidebarProps = {
   onNavigate?: () => void;
 };
 
+/**
+ * Light Nexora-style sidebar with icon nav.
+ */
 export function AppSidebar({ className = "", onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
     <aside
       id="app-sidebar-mobile"
-      className={`flex h-[calc(100vh-3.75rem)] w-[220px] shrink-0 flex-col border-r border-[var(--line)] bg-white sm:h-[calc(100vh-4rem)] ${className}`}
+      className={`flex h-[calc(100vh-3.5rem)] w-[240px] shrink-0 flex-col border-r border-[var(--line)] bg-[var(--side-bg)] text-[var(--side-ink)] sm:h-[calc(100vh-3.75rem)] ${className}`}
     >
-      <div className="flex flex-1 flex-col px-4 pt-8 pb-4">
-        <p className="mb-4 px-2 text-[10px] font-semibold tracking-[0.22em] text-[var(--muted)] uppercase">
-          Navigate
-        </p>
-
-        <nav className="flex flex-col gap-0.5">
+      <div className="flex flex-1 flex-col px-3 pt-6 pb-4">
+        <nav className="flex flex-col gap-0">
           {NAV.map((item) => (
             <NavRow
               key={item.id}
@@ -56,16 +55,24 @@ export function AppSidebar({ className = "", onNavigate }: AppSidebarProps) {
           ))}
         </nav>
 
-        <div className="mt-auto pt-8">
-          <div className="rounded-2xl border border-[var(--line)] bg-[var(--purple-soft)]/60 px-3.5 py-3.5">
-            <p className="text-[11px] font-semibold tracking-wide text-[var(--ink)]">
-              Built for real answers
+        <div className="mt-auto space-y-3 pt-8">
+          <div className="rounded-2xl bg-gradient-to-br from-[#ede9fe] via-[#fce7f3] to-[#fff7ed] p-4 shadow-sm">
+            <p className="text-[12px] font-bold tracking-tight text-[var(--ink)]">
+              Go further on Volmiq
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-[var(--muted)]">
-              Rooms for exams & careers — calm, focused, no noise.
+              Ask clearer questions. Vote what helps. Grow with your room.
             </p>
+            <Link
+              href="/ask"
+              onClick={onNavigate}
+              className="vol-btn-primary mt-3 inline-flex h-9 w-full gap-1.5 px-3 text-[12px] no-underline"
+            >
+              <IconAsk className="h-3.5 w-3.5" />
+              Ask a question
+            </Link>
           </div>
-          <p className="mt-4 px-1 text-[10px] tracking-wide text-[var(--muted)]/80">
+          <p className="px-1 text-[10px] tracking-wide text-[var(--side-muted)]">
             © {new Date().getFullYear()} Volmiq
           </p>
         </div>
@@ -88,22 +95,19 @@ function NavRow({
   active: boolean;
   onNavigate?: () => void;
 }) {
+  const { Icon } = item;
+
   if (active) {
     return (
       <Link
         href={item.href}
         onClick={onNavigate}
-        className="relative flex items-baseline justify-between rounded-xl bg-[var(--purple-soft)] px-3 py-2.5 text-[var(--purple-deep)] no-underline"
+        className="flex items-center gap-2 rounded-lg bg-[var(--side-active)] px-2.5 py-1.5 font-semibold text-[var(--side-accent)] no-underline"
       >
-        <span className="text-[13px] font-semibold tracking-tight">
-          {item.label}
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/80 text-[var(--side-accent)] shadow-sm">
+          <Icon className="h-3.5 w-3.5" />
         </span>
-        {item.hint && (
-          <span className="text-[10px] font-medium tracking-wide text-[var(--purple)]">
-            {item.hint}
-          </span>
-        )}
-        <span className="absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[var(--purple)]" />
+        <span className="text-[13px] tracking-tight">{item.label}</span>
       </Link>
     );
   }
@@ -112,16 +116,12 @@ function NavRow({
     <Link
       href={item.href}
       onClick={onNavigate}
-      className="flex items-baseline justify-between rounded-xl px-3 py-2.5 text-[var(--ink)] no-underline transition hover:bg-[var(--purple-soft)]/50"
+      className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[var(--ink-soft)] no-underline transition hover:bg-[var(--side-hover)] hover:text-[var(--ink)]"
     >
-      <span className="text-[13px] font-semibold tracking-tight">
-        {item.label}
+      <span className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--side-muted)]">
+        <Icon className="h-3.5 w-3.5" />
       </span>
-      {item.hint && (
-        <span className="text-[10px] font-medium tracking-wide text-[var(--muted)]">
-          {item.hint}
-        </span>
-      )}
+      <span className="text-[13px] font-medium tracking-tight">{item.label}</span>
     </Link>
   );
 }

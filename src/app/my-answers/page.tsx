@@ -1,10 +1,6 @@
-import { AppShell } from "@/components/layout/AppShell";
-import { MyAnswers } from "@/components/posts/MyAnswers";
+import { redirect } from "next/navigation";
 
-export default function MyAnswersPage() {
-  return (
-    <AppShell>
-      <MyAnswers />
-    </AppShell>
-  );
+/** Merged into /my */
+export default function MyAnswersRedirect() {
+  redirect("/my");
 }

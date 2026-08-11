@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { Post } from "@/types/post";
 import { PostCard } from "@/components/posts/PostCard";
+import { IconArrowLeft, IconSearch } from "@/components/ui/Icons";
 import { PostCardListSkeleton } from "@/components/ui/Skeletons";
 import { searchPosts } from "@/lib/supabase/posts";
 
@@ -51,41 +52,45 @@ export function SearchResults() {
 
   if (!q) {
     return (
-      <div className="mx-auto max-w-2xl">
-        <h1 className="text-xl font-semibold tracking-tight text-[var(--ink)]">
-          Search
+      <div className="mx-auto flex max-w-2xl flex-col gap-2">
+        <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight text-[var(--ink)]">
+          <IconSearch className="h-5 w-5 shrink-0 text-[var(--purple)]" />
+          <span>Search</span>
         </h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">
+        <p className="text-sm leading-relaxed text-[var(--muted)]">
           Type a word in the header and press Enter to find questions.
         </p>
         <Link
           href="/"
-          className="mt-4 inline-flex text-[13px] font-semibold text-[var(--purple)] no-underline hover:text-[var(--purple-deep)]"
+          className="mt-2 inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold text-[var(--purple)] no-underline hover:text-[var(--purple-deep)]"
         >
-          ← Back to feed
+          <IconArrowLeft className="h-3.5 w-3.5 shrink-0" />
+          <span>Back to feed</span>
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-3">
-      <div className="mb-1">
+    <div className="mx-auto flex max-w-2xl flex-col gap-4">
+      <header className="flex flex-col gap-2">
         <Link
           href="/"
-          className="inline-flex text-[13px] font-semibold text-[var(--purple)] no-underline hover:text-[var(--purple-deep)]"
+          className="inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold text-[var(--purple)] no-underline hover:text-[var(--purple-deep)]"
         >
-          ← Back to feed
+          <IconArrowLeft className="h-3.5 w-3.5 shrink-0" />
+          <span>Back to feed</span>
         </Link>
-        <h1 className="mt-3 text-xl font-semibold tracking-tight text-[var(--ink)]">
-          Results for “{q}”
+        <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight text-[var(--ink)] sm:text-2xl">
+          <IconSearch className="h-6 w-6 shrink-0 text-[var(--purple)]" />
+          <span>Results for “{q}”</span>
         </h1>
         {!loading && !error && (
-          <p className="mt-1 text-[13px] text-[var(--muted)]">
+          <p className="text-[13px] text-[var(--muted)]">
             {posts.length} {posts.length === 1 ? "question" : "questions"}
           </p>
         )}
-      </div>
+      </header>
 
       {error && (
         <p className="text-sm text-red-600">Could not search: {error}</p>

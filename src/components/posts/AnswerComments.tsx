@@ -12,6 +12,11 @@ import {
   hasDraft,
   saveDraft,
 } from "@/lib/drafts";
+import {
+  IconChevronRight,
+  IconComments,
+  IconEdit,
+} from "@/components/ui/Icons";
 import { CommentsSkeleton } from "@/components/ui/Skeletons";
 import {
   buildCommentTree,
@@ -138,10 +143,10 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
           className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[var(--muted)] transition hover:text-[var(--purple)]"
           aria-expanded={sectionOpen}
         >
-          <ChevronTiny
+          <IconChevronRight
             className={`h-3.5 w-3.5 text-[var(--purple)] transition-transform ${sectionOpen ? "rotate-90" : ""}`}
           />
-          <BubbleIcon className="h-3.5 w-3.5 text-[var(--purple)]" />
+          <IconComments className="h-3.5 w-3.5 text-[var(--purple)]" />
           Comments {count > 0 ? `(${count})` : ""}
           <span className="font-medium text-[var(--muted)]/80">
             {sectionOpen ? "· collapse" : "· expand"}
@@ -154,8 +159,9 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
             setSectionOpen(true);
             setShowForm((v) => !v);
           }}
-          className="text-[12px] font-semibold text-[var(--purple)] transition hover:text-[var(--purple-deep)]"
+          className="inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--purple)] transition hover:text-[var(--purple-deep)]"
         >
+          <IconEdit className="h-3.5 w-3.5" />
           {showForm ? "Hide form" : "Add a comment"}
         </button>
       </div>
@@ -203,39 +209,4 @@ function countComments(nodes: Comment[]): number {
     n += 1 + countComments(c.children ?? []);
   }
   return n;
-}
-
-function ChevronTiny({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="m9 6 6 6-6 6" />
-    </svg>
-  );
-}
-
-function BubbleIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
-      <path d="M8 12h.01M12 12h.01M16 12h.01" />
-    </svg>
-  );
 }

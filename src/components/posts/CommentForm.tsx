@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { IconSend } from "@/components/ui/Icons";
 import {
   clearDraft,
   loadDraft,
@@ -48,7 +49,7 @@ export function CommentForm({
     e.preventDefault();
     const text = body.trim();
     if (!text) {
-      alert("Please write a comment first.");
+      setError("Please write a comment first.");
       return;
     }
 
@@ -80,13 +81,23 @@ export function CommentForm({
       )}
       <textarea
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={(e) => {
+          setBody(e.target.value);
+          if (error) setError(null);
+        }}
         disabled={submitting}
         rows={compact ? 2 : 3}
         placeholder={placeholder}
-        className="w-full resize-y rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[13px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--purple)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60"
+        className={[
+          "w-full resize-y rounded-xl border bg-[var(--paper)] px-3 py-2 text-[13px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60",
+          error
+            ? "border-red-400 focus:border-red-400"
+            : "border-[var(--line)] focus:border-[var(--purple)]",
+        ].join(" ")}
       />
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-1 text-[12px] font-medium text-red-600">{error}</p>
+      )}
       <div className="mt-2 flex justify-end gap-2">
         {onCancel && (
           <button
@@ -101,8 +112,9 @@ export function CommentForm({
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-full bg-[var(--purple)] px-3 py-1.5 text-[12px] font-semibold text-white transition hover:bg-[var(--purple-deep)] disabled:opacity-60"
+          className="inline-flex items-center gap-1 rounded-full bg-[var(--purple)] px-3 py-1.5 text-[12px] font-semibold text-white transition hover:bg-[var(--purple-deep)] disabled:opacity-60"
         >
+          <IconSend className="h-3 w-3" />
           {submitting ? "Posting…" : submitLabel}
         </button>
       </div>

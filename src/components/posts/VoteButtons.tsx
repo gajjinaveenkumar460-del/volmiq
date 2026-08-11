@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MyVote, VoteTargetType } from "@/types/vote";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { IconChevronDown, IconChevronUp } from "@/components/ui/Icons";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
 import { castVote, getMyVote } from "@/lib/supabase/votes";
 
@@ -31,6 +32,7 @@ export function VoteButtons({
   const [score, setScore] = useState(initialScore);
   const [myVote, setMyVote] = useState<MyVote>(0);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setScore(initialScore);
@@ -73,13 +75,14 @@ export function VoteButtons({
     }
 
     setBusy(true);
+    setError(null);
     try {
       const result = await castVote(targetType, targetId, value);
       setScore(result.score);
       setMyVote(result.myVote);
       onScoreChange?.(result.score);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Vote failed");
+      setError(err instanceof Error ? err.message : "Vote failed");
     } finally {
       setBusy(false);
     }
@@ -90,38 +93,45 @@ export function VoteButtons({
 
   if (variant === "inline") {
     return (
-      <div className={`inline-flex items-center gap-1 ${className}`}>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={(e) => handleVote(1, e)}
-          aria-label="Upvote"
-          aria-pressed={upActive}
-          className={
-            upActive
-              ? "flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--purple-soft)] text-[var(--purple)] disabled:opacity-60"
-              : "flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)] disabled:opacity-60"
-          }
-        >
-          <ChevronUp className="h-3.5 w-3.5" />
-        </button>
-        <span className="min-w-[1.5rem] text-center text-[12px] font-bold tabular-nums text-[var(--purple)]">
-          {score}
-        </span>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={(e) => handleVote(-1, e)}
-          aria-label="Downvote"
-          aria-pressed={downActive}
-          className={
-            downActive
-              ? "flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--purple-soft)] text-[var(--purple)] disabled:opacity-60"
-              : "flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)] disabled:opacity-60"
-          }
-        >
-          <ChevronDown className="h-3.5 w-3.5" />
-        </button>
+      <div className={`inline-flex flex-col items-start gap-1 ${className}`}>
+        <div className="inline-flex items-center gap-1">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={(e) => handleVote(1, e)}
+            aria-label="Upvote"
+            aria-pressed={upActive}
+            className={
+              upActive
+                ? "flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--purple-soft)] text-[var(--purple)] disabled:opacity-60"
+                : "flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)] disabled:opacity-60"
+            }
+          >
+            <IconChevronUp className="h-3.5 w-3.5" />
+          </button>
+          <span className="min-w-[1.5rem] text-center text-[12px] font-bold tabular-nums text-[var(--purple)]">
+            {score}
+          </span>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={(e) => handleVote(-1, e)}
+            aria-label="Downvote"
+            aria-pressed={downActive}
+            className={
+              downActive
+                ? "flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--purple-soft)] text-[var(--purple)] disabled:opacity-60"
+                : "flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)] disabled:opacity-60"
+            }
+          >
+            <IconChevronDown className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        {error && (
+          <p className="max-w-[12rem] text-[11px] font-medium leading-snug text-red-600">
+            {error}
+          </p>
+        )}
       </div>
     );
   }
@@ -142,7 +152,7 @@ export function VoteButtons({
             : "flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)] disabled:opacity-60"
         }
       >
-        <ChevronUp className="h-4 w-4" />
+        <IconChevronUp className="h-4 w-4" />
       </button>
       <span className="text-sm font-bold tabular-nums text-[var(--purple)]">
         {score}
@@ -159,42 +169,13 @@ export function VoteButtons({
             : "flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)] disabled:opacity-60"
         }
       >
-        <ChevronDown className="h-4 w-4" />
+        <IconChevronDown className="h-4 w-4" />
       </button>
+      {error && (
+        <p className="mt-0.5 max-w-[2.75rem] text-center text-[9px] font-medium leading-tight text-red-600">
+          {error}
+        </p>
+      )}
     </div>
-  );
-}
-
-function ChevronUp({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.25"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="m6 14 6-6 6 6" />
-    </svg>
-  );
-}
-
-function ChevronDown({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.25"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="m6 10 6 6 6-6" />
-    </svg>
   );
 }

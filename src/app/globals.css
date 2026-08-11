@@ -1,27 +1,75 @@
 @import "tailwindcss";
 
 /**
- * Volmiq chrome — purple + white
+ * Volmiq experiments — Nexora-inspired soft SaaS
+ * Light lavender paper, violet→pink gradient CTAs, airy white cards.
+ * Legacy --purple* tokens map into this system.
  */
 :root {
-  --paper: #faf8ff;
-  --paper-elevated: #ffffff;
+  --violet: #7c3aed;
+  --violet-deep: #6d28d9;
+  --pink: #ec4899;
+  --pink-soft: #fce7f3;
+  --lavender: #f3e8ff;
+  --sky-wash: #f5f3ff;
+
+  --paper: #f7f5ff;
+  --paper-elevated: #fbfaff;
   --surface: #ffffff;
-  --line: #ebe6f5;
-  --line-strong: #ddd5ee;
+  --line: #ebe6f8;
+  --line-strong: #ddd5f0;
   --muted: #6b6580;
-  --ink: #1a1528;
+  --ink: #1e1b2e;
+  --ink-soft: #3f3a52;
+
+  --indigo: #7c3aed;
+  --indigo-deep: #6d28d9;
+  --indigo-soft: #f3e8ff;
+  --indigo-mid: #a78bfa;
+
+  --clay: #f9a8d4;
+  --clay-soft: #fce7f3;
+
+  /* Legacy accent names */
   --purple: #7c3aed;
-  --purple-deep: #5b21b6;
+  --purple-deep: #6d28d9;
   --purple-soft: #f3e8ff;
   --purple-mid: #a78bfa;
+
   --signal: var(--purple);
   --signal-soft: var(--purple-soft);
-  --ember: #e85d3d;
-  --foreground: #1a1528;
+  --ember: #ec4899;
+  --vote: #7c3aed;
+  --danger: #e11d48;
+
+  --radius-card: 1.25rem;
+  --radius-control: 9999px;
+  --shadow-card: 0 1px 2px rgba(30, 27, 46, 0.04),
+    0 12px 32px -16px rgba(124, 58, 237, 0.14);
+
+  --foreground: var(--ink);
   --background: var(--paper);
 
   --font-sans: var(--font-jakarta), system-ui, sans-serif;
+
+  /* Light sidebar (Nexora-style) */
+  --side-bg: #ffffff;
+  --side-ink: #1e1b2e;
+  --side-muted: #8b849c;
+  --side-hover: #f5f3ff;
+  --side-active: #f3e8ff;
+  --side-accent: #7c3aed;
+
+  --navy: #1e1b2e;
+  --beige: #f7f5ff;
+  --matte: #f7f5ff;
+  --panel: #fbfaff;
+  --raised: #ffffff;
+  --lime: #7c3aed;
+  --marigold: #7c3aed;
+
+  --grad-ask: linear-gradient(135deg, #7c3aed 0%, #a855f7 45%, #ec4899 100%);
+  --grad-card: linear-gradient(135deg, #ede9fe 0%, #fce7f3 55%, #fff7ed 100%);
 }
 
 @theme inline {
@@ -38,7 +86,36 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Skeleton shimmer for loading states */
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 1;
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 10% 0%,
+      rgba(167, 139, 250, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 10%,
+      rgba(236, 72, 153, 0.1),
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 50% 35% at 50% 100%,
+      rgba(124, 58, 237, 0.06),
+      transparent 50%
+    );
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
 @keyframes vol-shimmer {
   0% {
     background-position: 100% 0;
@@ -52,10 +129,99 @@ body {
   background: linear-gradient(
     90deg,
     var(--line) 0%,
-    var(--purple-soft) 45%,
-    var(--line) 90%
+    #f3e8ff 40%,
+    #fce7f3 70%,
+    var(--line) 100%
   );
-  background-size: 200% 100%;
+  background-size: 220% 100%;
   animation: vol-shimmer 1.35s ease-in-out infinite;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
+}
+
+.vol-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vol-card:hover {
+  border-color: var(--line-strong);
+  box-shadow: 0 1px 2px rgba(30, 27, 46, 0.04),
+    0 16px 40px -16px rgba(124, 58, 237, 0.18);
+}
+
+.vol-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.4rem 0.95rem;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.vol-chip-active {
+  background: var(--grad-ask);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 14px -4px rgba(124, 58, 237, 0.45);
+}
+
+.vol-chip-idle {
+  background: #ffffff;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+
+.vol-chip-idle:hover {
+  border-color: var(--purple-mid);
+  color: var(--purple);
+  background: var(--purple-soft);
+}
+
+.vol-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--grad-ask);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  border: none;
+  box-shadow: 0 6px 18px -6px rgba(124, 58, 237, 0.5);
+  transition: opacity 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.vol-btn-primary:hover {
+  opacity: 0.95;
+  box-shadow: 0 8px 22px -6px rgba(236, 72, 153, 0.4);
+}
+
+.vol-btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--purple-soft);
+  color: var(--purple-deep);
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: background 0.15s ease;
+}
+
+.vol-btn-accent:hover {
+  background: #ede9fe;
+}
+
+input,
+textarea,
+select {
+  color-scheme: light;
 }

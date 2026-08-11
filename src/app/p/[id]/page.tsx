@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { PostDetailCard } from "@/components/posts/PostDetailCard";
 import { QuestionThread } from "@/components/posts/QuestionThread";
+import { IconArrowLeft } from "@/components/ui/Icons";
 import { getAllCommunities } from "@/lib/supabase/communities";
 import { getAnswersByPostId } from "@/lib/supabase/answers";
 import { getPostById } from "@/lib/supabase/posts";
@@ -47,12 +48,13 @@ export default async function PostDetailPage({ params }: PageProps) {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto flex max-w-2xl flex-col gap-4">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--purple)] no-underline transition hover:text-[var(--purple-deep)]"
+          className="inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold text-[var(--purple)] no-underline transition hover:text-[var(--purple-deep)]"
         >
-          ← Back to feed
+          <IconArrowLeft className="h-3.5 w-3.5 shrink-0" />
+          <span>Back to feed</span>
         </Link>
 
         <PostDetailCard

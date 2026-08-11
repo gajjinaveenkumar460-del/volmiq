@@ -6,11 +6,11 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 
 type AppShellProps = {
   children: React.ReactNode;
-  /** Hide side nav on auth / focused pages */
   showSidebar?: boolean;
   showSearch?: boolean;
-  /** Hide Ask + auth controls (login screen) */
   showHeaderActions?: boolean;
+  /** Override main content classes (e.g. full-bleed login) */
+  mainClassName?: string;
 };
 
 export function AppShell({
@@ -18,6 +18,7 @@ export function AppShell({
   showSidebar = true,
   showSearch = true,
   showHeaderActions = true,
+  mainClassName,
 }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -40,7 +41,6 @@ export function AppShell({
     };
   }, [sidebarOpen]);
 
-  // Close drawer if sidebar is disabled (e.g. login page)
   useEffect(() => {
     if (!showSidebar) setSidebarOpen(false);
   }, [showSidebar]);
@@ -76,7 +76,7 @@ export function AppShell({
 
             <div
               className={[
-                "fixed top-[3.75rem] bottom-0 left-0 z-50 w-[min(240px,88vw)] transform transition-transform duration-200 ease-out sm:top-16 md:hidden",
+                "fixed top-14 bottom-0 left-0 z-50 w-[min(260px,88vw)] transform transition-transform duration-200 ease-out sm:top-16 md:hidden",
                 sidebarOpen
                   ? "translate-x-0"
                   : "pointer-events-none -translate-x-full",
@@ -84,7 +84,7 @@ export function AppShell({
               aria-hidden={!sidebarOpen}
             >
               <AppSidebar
-                className="h-full w-full shadow-2xl shadow-black/20"
+                className="h-full w-full shadow-2xl shadow-[var(--purple)]/15"
                 onNavigate={closeSidebar}
               />
             </div>
@@ -93,9 +93,10 @@ export function AppShell({
 
         <main
           className={
-            showSidebar
-              ? "min-w-0 flex-1 px-4 py-8 sm:px-8 sm:py-10"
-              : "mx-auto min-w-0 w-full max-w-lg flex-1 px-4 py-10 sm:px-6 sm:py-14"
+            mainClassName ??
+            (showSidebar
+              ? "min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8"
+              : "mx-auto min-w-0 w-full max-w-md flex-1 px-4 py-12 sm:px-6 sm:py-16")
           }
         >
           {children}

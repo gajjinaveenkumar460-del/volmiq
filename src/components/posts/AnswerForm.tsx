@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { IconAnswers, IconSend } from "@/components/ui/Icons";
 import {
   clearDraft,
   draftKeys,
@@ -37,7 +38,7 @@ export function AnswerForm({ postId, onAddAnswer }: AnswerFormProps) {
     e.preventDefault();
     const text = body.trim();
     if (!text) {
-      alert("Please write an answer first.");
+      setError("Please write an answer first.");
       return;
     }
 
@@ -64,10 +65,11 @@ export function AnswerForm({ postId, onAddAnswer }: AnswerFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-6 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-sm shadow-[var(--purple)]/5 sm:p-5"
+      className="vol-card mt-6 p-4 sm:p-5"
       id="write-answer"
     >
-      <h3 className="text-[14px] font-semibold tracking-tight text-[var(--ink)]">
+      <h3 className="inline-flex items-center gap-2 text-[14px] font-bold tracking-tight text-[var(--ink)]">
+        <IconAnswers className="h-4 w-4 text-[var(--purple)]" />
         Write an answer
       </h3>
       <p className="mt-1 text-[12px] text-[var(--muted)]">
@@ -81,21 +83,32 @@ export function AnswerForm({ postId, onAddAnswer }: AnswerFormProps) {
 
       <textarea
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={(e) => {
+          setBody(e.target.value);
+          if (error) setError(null);
+        }}
         disabled={submitting}
         rows={4}
         placeholder="Share a helpful answer…"
-        className="mt-3 w-full resize-y rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--purple)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60"
+        className={[
+          "mt-3 w-full resize-y rounded-xl border bg-[var(--paper)] px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none transition placeholder:text-[var(--muted)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60",
+          error
+            ? "border-red-400 focus:border-red-400"
+            : "border-[var(--line)] focus:border-[var(--purple)]",
+        ].join(" ")}
       />
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-1.5 text-[12px] font-medium text-red-600">{error}</p>
+      )}
 
       <div className="mt-3 flex justify-end">
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-full bg-[var(--purple)] px-4 py-2 text-[12px] font-semibold tracking-wide text-white shadow-sm shadow-[var(--purple)]/20 transition hover:bg-[var(--purple-deep)] disabled:opacity-60"
+          className="vol-btn-primary inline-flex h-9 items-center gap-1.5 px-4 disabled:opacity-60"
         >
+          <IconSend className="h-3.5 w-3.5" />
           {submitting ? "Posting…" : "Post answer"}
         </button>
       </div>

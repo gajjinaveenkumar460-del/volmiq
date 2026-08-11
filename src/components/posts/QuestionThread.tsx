@@ -9,6 +9,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { displayNameFromUser } from "@/lib/auth/displayName";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
 import { draftKeys, saveDraft } from "@/lib/drafts";
+import { IconAnswers } from "@/components/ui/Icons";
 import { createAnswer } from "@/lib/supabase/answers";
 import { setAcceptedAnswer } from "@/lib/supabase/posts";
 
@@ -110,7 +111,8 @@ export function QuestionThread({
       <AnswerForm postId={postId} onAddAnswer={handleAddAnswer} />
 
       <section className="mt-8">
-        <h2 className="text-[15px] font-semibold tracking-tight text-[var(--ink)]">
+        <h2 className="inline-flex items-center gap-2 text-[15px] font-semibold tracking-tight text-[var(--ink)]">
+          <IconAnswers className="h-4 w-4 text-[var(--purple)]" />
           Answers{" "}
           <span className="font-medium text-[var(--muted)]">
             ({answers.length})

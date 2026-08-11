@@ -25,21 +25,18 @@ export function ChipsSkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-/** One feed card placeholder (matches PostCard shape) */
+/** One feed card placeholder (matches Nexora-style PostCard) */
 export function PostCardSkeleton() {
   return (
-    <article
-      className="flex gap-4 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-sm shadow-[var(--purple)]/5 sm:p-5"
-      aria-hidden
-    >
-      <div className="flex w-10 shrink-0 flex-col items-center gap-2 pt-0.5">
-        <SkeletonBar className="h-8 w-8 rounded-lg" />
+    <article className="vol-card flex gap-1 overflow-hidden sm:gap-2" aria-hidden>
+      <div className="flex w-12 shrink-0 flex-col items-center gap-2 py-4 sm:w-14 sm:py-5">
+        <SkeletonBar className="h-7 w-7 rounded-lg" />
         <SkeletonBar className="h-4 w-6" />
-        <SkeletonBar className="h-8 w-8 rounded-lg" />
+        <SkeletonBar className="h-7 w-7 rounded-lg" />
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 py-4 pr-4 sm:py-5 sm:pr-5">
         <div className="flex flex-wrap items-center gap-2">
-          <SkeletonBar className="h-5 w-16 rounded-full" />
+          <SkeletonBar className="h-5 w-20 rounded-full" />
           <SkeletonBar className="h-3.5 w-28" />
         </div>
         <SkeletonBar className="mt-3 h-5 w-[88%]" />
@@ -86,7 +83,7 @@ export function PostDetailSkeleton() {
       <span className="sr-only">Loading question…</span>
       <SkeletonBar className="h-4 w-28" />
 
-      <article className="mt-4 rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm shadow-[var(--purple)]/5 sm:p-7">
+      <article className="vol-card mt-4 p-5 sm:p-7">
         <div className="flex flex-wrap gap-2">
           <SkeletonBar className="h-5 w-20 rounded-full" />
           <SkeletonBar className="h-4 w-24" />
@@ -109,7 +106,7 @@ export function PostDetailSkeleton() {
 
       <div className="mt-8">
         <SkeletonBar className="h-5 w-28" />
-        <div className="mt-4 rounded-2xl border border-[var(--line)] bg-white p-4 sm:p-5">
+        <div className="vol-card mt-4 p-4 sm:p-5">
           <SkeletonBar className="h-4 w-32" />
           <SkeletonBar className="mt-3 h-20 w-full rounded-xl" />
           <div className="mt-3 flex justify-end">
@@ -127,10 +124,7 @@ export function PostDetailSkeleton() {
 
 export function AnswerCardSkeleton() {
   return (
-    <li
-      className="rounded-2xl border border-[var(--line)] bg-white p-4 shadow-sm shadow-[var(--purple)]/5"
-      aria-hidden
-    >
+    <li className="vol-card list-none p-4" aria-hidden>
       <SkeletonBar className="h-3.5 w-36" />
       <SkeletonBar className="mt-3 h-4 w-full" />
       <SkeletonBar className="mt-1.5 h-4 w-11/12" />
@@ -147,10 +141,7 @@ export function AnswerCardSkeleton() {
 /** My answers list item */
 export function AnswerListItemSkeleton() {
   return (
-    <article
-      className="rounded-2xl border border-[var(--line)] bg-white p-4 shadow-sm shadow-[var(--purple)]/5 sm:p-5"
-      aria-hidden
-    >
+    <article className="vol-card p-4 sm:p-5" aria-hidden>
       <SkeletonBar className="h-3.5 w-32" />
       <SkeletonBar className="mt-3 h-4 w-full" />
       <SkeletonBar className="mt-1.5 h-4 w-4/5" />

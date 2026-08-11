@@ -7,7 +7,7 @@ import { safeNextPath } from "@/lib/auth/safeNextPath";
 import { createClient } from "@/lib/supabase/client";
 import "./login-motion.css";
 
-/** Login Design 1 — bubbles + glass card (active). */
+/** Snapshot: Login Design 1 (bubbles + glass card). Restore by copying to src/components/auth/. */
 
 type Mode = "signin" | "signup";
 

@@ -21,8 +21,8 @@ export function BrandLogo({
         style={{ width: size, height: size }}
         aria-hidden
       />
-      <span className="hidden select-none text-[15px] font-semibold tracking-[-0.03em] text-[var(--ink)] sm:inline">
-        vol<span className="text-[var(--purple)]">miq</span>
+      <span className="hidden select-none text-[15px] font-extrabold tracking-[-0.04em] text-[var(--ink)] sm:inline">
+        VOL<span className="bg-gradient-to-r from-[var(--violet,#7c3aed)] to-[var(--pink,#ec4899)] bg-clip-text text-transparent">MIQ</span>
       </span>
     </span>
   );
@@ -31,7 +31,7 @@ export function BrandLogo({
     return (
       <a
         href={href}
-        className="shrink-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--purple)]/35 focus-visible:ring-offset-2"
+        className="shrink-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[var(--purple)]/35 focus-visible:ring-offset-2"
         aria-label="Volmiq home"
       >
         {content}

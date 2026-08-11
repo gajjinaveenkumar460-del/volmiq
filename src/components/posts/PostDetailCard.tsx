@@ -7,6 +7,13 @@ import type { Community } from "@/types/community";
 import type { Post } from "@/types/post";
 import { VoteButtons } from "@/components/posts/VoteButtons";
 import { useAuth } from "@/components/providers/AuthProvider";
+import {
+  IconEdit,
+  IconRoom,
+  IconTrash,
+  IconUser,
+} from "@/components/ui/Icons";
+import { RoomSelect } from "@/components/ui/RoomSelect";
 import { deletePost, updatePost } from "@/lib/supabase/posts";
 
 type PostDetailCardProps = {
@@ -35,6 +42,10 @@ export function PostDetailCard({
   const [communitySlug, setCommunitySlug] = useState(initialPost.communitySlug);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    room?: string;
+    title?: string;
+  }>({});
 
   const communityName =
     communities.find((c) => c.slug === post.communitySlug)?.name ??
@@ -51,19 +62,17 @@ export function PostDetailCard({
   function cancelEdit() {
     setEditing(false);
     setError(null);
+    setFieldErrors({});
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     const trimmedTitle = title.trim();
-    if (!trimmedTitle) {
-      alert("Please write a title first.");
-      return;
-    }
-    if (!communitySlug) {
-      alert("Please pick a room.");
-      return;
-    }
+    const nextFields: { room?: string; title?: string } = {};
+    if (!communitySlug) nextFields.room = "Please pick a room.";
+    if (!trimmedTitle) nextFields.title = "Please write a title first.";
+    setFieldErrors(nextFields);
+    if (nextFields.room || nextFields.title) return;
 
     setBusy(true);
     setError(null);
@@ -98,7 +107,7 @@ export function PostDetailCard({
     setError(null);
     try {
       await deletePost(post.id);
-      router.push("/my-questions");
+      router.push("/my");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete");
@@ -107,13 +116,14 @@ export function PostDetailCard({
   }
 
   return (
-    <article className="mt-4 rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm shadow-[var(--purple)]/5 sm:p-7">
+    <article className="vol-card p-5 sm:p-7">
       {!editing ? (
         <>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-full bg-[var(--purple-soft)] px-2.5 py-0.5 text-[11px] font-semibold tracking-wide text-[var(--purple)]">
-                c/{post.communitySlug}
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--purple-soft)] px-2.5 py-0.5 text-[11px] font-semibold tracking-wide text-[var(--purple)]">
+                <IconRoom className="h-3 w-3" />
+                {post.communitySlug}
               </span>
               {communityName && (
                 <span className="text-[12px] text-[var(--muted)]">
@@ -128,27 +138,30 @@ export function PostDetailCard({
                   type="button"
                   onClick={startEdit}
                   disabled={busy}
-                  className="rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-[12px] font-semibold text-[var(--ink)] transition hover:border-[var(--purple)]/40 hover:bg-[var(--purple-soft)]/50 hover:text-[var(--purple)] disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-1.5 text-[12px] font-semibold text-[var(--ink)] transition hover:border-[var(--purple)]/40 hover:bg-[var(--purple-soft)] disabled:opacity-60"
                 >
+                  <IconEdit className="h-3.5 w-3.5" />
                   Edit
                 </button>
                 <button
                   type="button"
                   onClick={handleDelete}
                   disabled={busy}
-                  className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-[var(--surface)] px-3 py-1.5 text-[12px] font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
                 >
+                  <IconTrash className="h-3.5 w-3.5" />
                   {busy ? "…" : "Delete"}
                 </button>
               </div>
             )}
           </div>
 
-          <h1 className="mt-3 text-xl font-semibold tracking-tight text-[var(--ink)] sm:text-2xl">
+          <h1 className="mt-3 text-xl font-bold tracking-[-0.03em] text-[var(--ink)] sm:text-2xl">
             {post.title}
           </h1>
 
-          <p className="mt-2 text-[13px] text-[var(--muted)]">
+          <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-[var(--muted)]">
+            <IconUser className="h-3.5 w-3.5" />
             {post.authorName} · {post.createdAt}
           </p>
 
@@ -173,31 +186,49 @@ export function PostDetailCard({
             Edit question
           </h2>
 
-          <label className="mt-4 block text-[12px] font-semibold text-[var(--ink)]">
-            Room
-            <select
+          <div className="mt-4">
+            <span className="block text-[12px] font-semibold text-[var(--ink)]">
+              Room
+            </span>
+            <RoomSelect
+              communities={communities}
               value={communitySlug}
-              onChange={(e) => setCommunitySlug(e.target.value)}
-              disabled={busy || communities.length === 0}
-              className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none focus:border-[var(--purple)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60"
-            >
-              {communities.map((c) => (
-                <option key={c.id} value={c.slug}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              disabled={busy}
+              error={fieldErrors.room}
+              onChange={(slug) => {
+                setCommunitySlug(slug);
+                setFieldErrors((f) => ({ ...f, room: undefined }));
+              }}
+            />
+            {fieldErrors.room && (
+              <p className="mt-1.5 text-[12px] font-medium text-red-600">
+                {fieldErrors.room}
+              </p>
+            )}
+          </div>
 
           <label className="mt-4 block text-[12px] font-semibold text-[var(--ink)]">
             Title
             <input
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setFieldErrors((f) => ({ ...f, title: undefined }));
+              }}
               disabled={busy}
-              className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none focus:border-[var(--purple)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60"
+              className={[
+                "mt-1.5 w-full rounded-xl border bg-[var(--paper)] px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60",
+                fieldErrors.title
+                  ? "border-red-400 focus:border-red-400"
+                  : "border-[var(--line)] focus:border-[var(--purple)]",
+              ].join(" ")}
             />
+            {fieldErrors.title && (
+              <p className="mt-1.5 text-[12px] font-medium text-red-600">
+                {fieldErrors.title}
+              </p>
+            )}
           </label>
 
           <label className="mt-4 block text-[12px] font-semibold text-[var(--ink)]">
@@ -237,10 +268,10 @@ export function PostDetailCard({
         <p className="mt-3 text-[11px] text-[var(--muted)]">
           You own this question.{" "}
           <Link
-            href="/my-questions"
+            href="/my"
             className="font-semibold text-[var(--purple)] no-underline hover:text-[var(--purple-deep)]"
           >
-            My questions
+            My activity
           </Link>
         </p>
       )}

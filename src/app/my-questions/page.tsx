@@ -1,10 +1,6 @@
-import { AppShell } from "@/components/layout/AppShell";
-import { MyQuestions } from "@/components/posts/MyQuestions";
+import { redirect } from "next/navigation";
 
-export default function MyQuestionsPage() {
-  return (
-    <AppShell>
-      <MyQuestions />
-    </AppShell>
-  );
+/** Merged into /my */
+export default function MyQuestionsRedirect() {
+  redirect("/my");
 }

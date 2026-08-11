@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { Community } from "@/types/community";
 import type { Post } from "@/types/post";
 import { PostCard } from "@/components/posts/PostCard";
@@ -8,8 +9,24 @@ import {
   ChipsSkeleton,
   PostCardListSkeleton,
 } from "@/components/ui/Skeletons";
+import {
+  IconAsk,
+  IconClock,
+  IconFlame,
+  IconLayers,
+  IconRoom,
+} from "@/components/ui/Icons";
 import { getAllCommunities } from "@/lib/supabase/communities";
 import { getAllPosts, type FeedSort } from "@/lib/supabase/posts";
+
+const PASTEL = [
+  "bg-violet-100 text-violet-700",
+  "bg-pink-100 text-pink-700",
+  "bg-sky-100 text-sky-700",
+  "bg-amber-100 text-amber-800",
+  "bg-emerald-100 text-emerald-700",
+  "bg-fuchsia-100 text-fuchsia-700",
+];
 
 export function HomeFeed() {
   const [selectedCommunity, setSelectedCommunity] = useState<string>("all");
@@ -56,9 +73,10 @@ export function HomeFeed() {
       : dbPosts.filter((p) => p.communitySlug === selectedCommunity);
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-3">
-      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-h-8 flex-wrap gap-2">
+    <div className="mx-auto flex max-w-3xl flex-col gap-5">
+      {/* Rooms + sort */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-h-9 flex-wrap gap-2">
           {loading && communities.length === 0 ? (
             <ChipsSkeleton count={5} />
           ) : (
@@ -68,42 +86,49 @@ export function HomeFeed() {
                 onClick={() => setSelectedCommunity("all")}
                 className={
                   selectedCommunity === "all"
-                    ? "rounded-full bg-[var(--purple)] px-3 py-1.5 text-[12px] font-semibold text-white"
-                    : "rounded-full bg-[var(--purple-soft)] px-3 py-1.5 text-[12px] font-semibold text-[var(--purple)]"
+                    ? "vol-chip vol-chip-active gap-1.5"
+                    : "vol-chip vol-chip-idle gap-1.5"
                 }
               >
+                <IconLayers className="h-3.5 w-3.5" />
                 All
               </button>
 
-              {communities.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setSelectedCommunity(c.slug)}
-                  className={
-                    selectedCommunity === c.slug
-                      ? "rounded-full bg-[var(--purple)] px-3 py-1.5 text-[12px] font-semibold text-white"
-                      : "rounded-full bg-[var(--purple-soft)] px-3 py-1.5 text-[12px] font-semibold text-[var(--purple)]"
-                  }
-                >
-                  {c.name}
-                </button>
-              ))}
+              {communities.map((c, i) => {
+                const active = selectedCommunity === c.slug;
+                const pastel = PASTEL[i % PASTEL.length];
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCommunity(c.slug)}
+                    className={
+                      active
+                        ? "vol-chip vol-chip-active gap-1.5"
+                        : `vol-chip gap-1.5 border-0 ${pastel}`
+                    }
+                  >
+                    <IconRoom className="h-3.5 w-3.5 opacity-80" />
+                    {c.name}
+                  </button>
+                );
+              })}
             </>
           )}
         </div>
 
-        <div className="flex gap-1 rounded-full border border-[var(--line)] bg-white p-0.5">
+        <div className="flex gap-0.5 rounded-full border border-[var(--line)] bg-white p-1 shadow-sm">
           <button
             type="button"
             onClick={() => setSort("hot")}
             disabled={loading}
             className={
               sort === "hot"
-                ? "rounded-full bg-[var(--purple)] px-3 py-1 text-[11px] font-semibold text-white"
-                : "rounded-full px-3 py-1 text-[11px] font-semibold text-[var(--muted)] hover:text-[var(--purple)] disabled:opacity-60"
+                ? "inline-flex items-center gap-1 rounded-full bg-[var(--purple-soft)] px-3 py-1.5 text-[11px] font-semibold text-[var(--purple)]"
+                : "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold text-[var(--muted)] hover:text-[var(--ink)] disabled:opacity-60"
             }
           >
+            <IconFlame className="h-3.5 w-3.5" />
             Hot
           </button>
           <button
@@ -112,10 +137,11 @@ export function HomeFeed() {
             disabled={loading}
             className={
               sort === "new"
-                ? "rounded-full bg-[var(--purple)] px-3 py-1 text-[11px] font-semibold text-white"
-                : "rounded-full px-3 py-1 text-[11px] font-semibold text-[var(--muted)] hover:text-[var(--purple)] disabled:opacity-60"
+                ? "inline-flex items-center gap-1 rounded-full bg-[var(--purple-soft)] px-3 py-1.5 text-[11px] font-semibold text-[var(--purple)]"
+                : "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold text-[var(--muted)] hover:text-[var(--ink)] disabled:opacity-60"
             }
           >
+            <IconClock className="h-3.5 w-3.5" />
             New
           </button>
         </div>
@@ -128,7 +154,18 @@ export function HomeFeed() {
       {loading && <PostCardListSkeleton count={4} />}
 
       {!loading && !error && visiblePosts.length === 0 && (
-        <p className="text-sm text-[var(--muted)]">No posts in this room yet.</p>
+        <div className="vol-card p-8 text-center">
+          <p className="text-sm text-[var(--muted)]">
+            No posts in this room yet.
+          </p>
+          <Link
+            href="/ask"
+            className="vol-btn-primary mt-4 inline-flex h-10 gap-1.5 px-4 no-underline"
+          >
+            <IconAsk className="h-3.5 w-3.5" />
+            Be the first to ask
+          </Link>
+        </div>
       )}
 
       {!loading &&

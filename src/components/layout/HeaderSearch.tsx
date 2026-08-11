@@ -1,13 +1,17 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { IconSearch } from "@/components/ui/Icons";
 
 /**
- * Header search box — submits to /search?q=…
+ * Nexora-style pill search.
+ * Enter with text → /search?q=…
+ * Clear box (no Enter) → home feed with all posts.
  */
 export function HeaderSearch() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const urlQ = searchParams.get("q") ?? "";
   const [value, setValue] = useState(urlQ);
@@ -16,11 +20,25 @@ export function HeaderSearch() {
     setValue(urlQ);
   }, [urlQ]);
 
+  function goHomeFeed() {
+    // Already on home with no query — nothing to do
+    if (pathname === "/" && !searchParams.get("q")) return;
+    router.push("/");
+  }
+
+  function handleChange(next: string) {
+    setValue(next);
+    // Empty search box → show all posts without waiting for Enter
+    if (next.trim() === "") {
+      goHomeFeed();
+    }
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const q = value.trim();
     if (!q) {
-      router.push("/");
+      goHomeFeed();
       return;
     }
     router.push(`/search?q=${encodeURIComponent(q)}`);
@@ -29,42 +47,24 @@ export function HeaderSearch() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative mx-auto min-w-0 max-w-md flex-1"
+      className="relative mx-auto min-w-0 max-w-xl flex-1"
       role="search"
     >
       <label className="sr-only" htmlFor="vol-search">
         Search
       </label>
-      <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--paper)] px-3 py-2 transition focus-within:border-[var(--purple)] focus-within:ring-2 focus-within:ring-[var(--purple)]/15">
-        <SearchIcon className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
+      <div className="flex h-11 items-center gap-2.5 rounded-full border border-[var(--line)] bg-[var(--paper)] px-4 shadow-sm transition focus-within:border-[var(--purple)]/40 focus-within:bg-white focus-within:ring-4 focus-within:ring-[var(--purple)]/10">
+        <IconSearch className="h-4 w-4 shrink-0 text-[var(--muted)]" />
         <input
           id="vol-search"
           type="search"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="Search Volmiq…"
+          onChange={(e) => handleChange(e.target.value)}
+          placeholder="Search for knowledge, people or communities…"
           autoComplete="off"
-          className="w-full bg-transparent text-[13px] font-medium tracking-wide text-[var(--ink)] outline-none placeholder:text-[var(--muted)]/70"
+          className="w-full bg-transparent text-[13px] font-medium text-[var(--ink)] outline-none placeholder:text-[var(--muted)]/75"
         />
       </div>
     </form>
-  );
-}
-
-function SearchIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <circle cx="11" cy="11" r="6.5" />
-      <path d="m16.5 16.5 3.5 3.5" />
-    </svg>
   );
 }

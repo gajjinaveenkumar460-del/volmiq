@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Community } from "@/types/community";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { IconArrowLeft, IconAsk, IconSend } from "@/components/ui/Icons";
+import { RoomSelect } from "@/components/ui/RoomSelect";
 import { displayNameFromUser } from "@/lib/auth/displayName";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
 import {
@@ -29,6 +31,10 @@ export function AskForm() {
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    room?: string;
+    title?: string;
+  }>({});
   const [restored, setRestored] = useState(false);
 
   // Restore draft once (client)
@@ -87,14 +93,11 @@ export function AskForm() {
     const trimmedTitle = title.trim();
     const trimmedBody = body.trim();
 
-    if (!trimmedTitle) {
-      alert("Please write a title first.");
-      return;
-    }
-    if (!communitySlug) {
-      alert("Please pick a room.");
-      return;
-    }
+    const nextFields: { room?: string; title?: string } = {};
+    if (!communitySlug) nextFields.room = "Please pick a room.";
+    if (!trimmedTitle) nextFields.title = "Please write a title first.";
+    setFieldErrors(nextFields);
+    if (nextFields.room || nextFields.title) return;
 
     setSubmitting(true);
     setError(null);
@@ -132,22 +135,24 @@ export function AskForm() {
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--purple)] no-underline transition hover:text-[var(--purple-deep)]"
+        className="inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold text-[var(--purple)] no-underline transition hover:text-[var(--purple-deep)]"
       >
-        ← Back to feed
+        <IconArrowLeft className="h-3.5 w-3.5 shrink-0" />
+        <span>Back to feed</span>
       </Link>
 
       <form
         onSubmit={handleSubmit}
-        className="mt-4 rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm shadow-[var(--purple)]/5 sm:p-6"
+        className="vol-card p-5 sm:p-6"
       >
-        <h1 className="text-xl font-semibold tracking-tight text-[var(--ink)]">
-          Ask a question
+        <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight text-[var(--ink)]">
+          <IconAsk className="h-5 w-5 shrink-0 text-[var(--purple)]" />
+          <span>Ask a question</span>
         </h1>
-        <p className="mt-1 text-[13px] text-[var(--muted)]">
+        <p className="mt-1 text-[13px] leading-relaxed text-[var(--muted)]">
           Pick a room and write a clear title so others can answer.
         </p>
         {restored && (title || body) && (
@@ -156,37 +161,51 @@ export function AskForm() {
           </p>
         )}
 
-        <label className="mt-5 block text-[12px] font-semibold text-[var(--ink)]">
-          Room
-          <select
+        <div className="mt-5">
+          <span className="block text-[12px] font-semibold text-[var(--ink)]">
+            Room
+          </span>
+          <RoomSelect
+            communities={communities}
             value={communitySlug}
-            onChange={(e) => setCommunitySlug(e.target.value)}
-            disabled={submitting || loadingRooms || communities.length === 0}
-            className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none focus:border-[var(--purple)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60"
-          >
-            {communities.length === 0 && (
-              <option value="">
-                {loadingRooms ? "Loading rooms…" : "No rooms"}
-              </option>
-            )}
-            {communities.map((c) => (
-              <option key={c.id} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            loading={loadingRooms}
+            disabled={submitting}
+            error={fieldErrors.room}
+            onChange={(slug) => {
+              setCommunitySlug(slug);
+              setFieldErrors((f) => ({ ...f, room: undefined }));
+            }}
+          />
+          {fieldErrors.room && (
+            <p className="mt-1.5 text-[12px] font-medium text-red-600">
+              {fieldErrors.room}
+            </p>
+          )}
+        </div>
 
         <label className="mt-4 block text-[12px] font-semibold text-[var(--ink)]">
           Title
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setFieldErrors((f) => ({ ...f, title: undefined }));
+            }}
             disabled={submitting}
             placeholder="e.g. What is AI in simple words?"
-            className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--purple)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60"
+            className={[
+              "mt-1.5 w-full rounded-xl border bg-[var(--paper)] px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60",
+              fieldErrors.title
+                ? "border-red-400 focus:border-red-400"
+                : "border-[var(--line)] focus:border-[var(--purple)]",
+            ].join(" ")}
           />
+          {fieldErrors.title && (
+            <p className="mt-1.5 text-[12px] font-medium text-red-600">
+              {fieldErrors.title}
+            </p>
+          )}
         </label>
 
         <label className="mt-4 block text-[12px] font-semibold text-[var(--ink)]">
@@ -208,12 +227,13 @@ export function AskForm() {
           <button
             type="submit"
             disabled={submitting || loadingRooms}
-            className="rounded-full bg-[var(--purple)] px-5 py-2.5 text-[13px] font-semibold tracking-wide text-white shadow-sm shadow-[var(--purple)]/20 transition hover:bg-[var(--purple-deep)] disabled:opacity-60"
+            className="vol-btn-primary inline-flex h-10 items-center gap-1.5 px-5 disabled:opacity-60"
           >
+            <IconSend className="h-3.5 w-3.5" />
             {submitting ? "Posting…" : "Post question"}
           </button>
         </div>
       </form>
-    </>
+    </div>
   );
 }

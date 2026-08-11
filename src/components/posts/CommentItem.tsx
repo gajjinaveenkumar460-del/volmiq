@@ -5,6 +5,13 @@ import type { Comment } from "@/types/comment";
 import { CommentForm } from "@/components/posts/CommentForm";
 import { VoteButtons } from "@/components/posts/VoteButtons";
 import { useAuth } from "@/components/providers/AuthProvider";
+import {
+  IconChevronRight,
+  IconEdit,
+  IconReply,
+  IconTrash,
+  IconUser,
+} from "@/components/ui/Icons";
 import { draftKeys, hasDraft } from "@/lib/drafts";
 import { deleteComment, updateComment } from "@/lib/supabase/comments";
 
@@ -70,13 +77,13 @@ export function CommentItem({
                   aria-hidden
                 />
                 <span
-                  className="pointer-events-none absolute top-3 left-[7px] z-[2] h-[8px] w-[8px] -translate-y-[6px] rounded-bl-[7px] border-b-2 border-l-2 border-[var(--purple-soft)] bg-white"
+                  className="pointer-events-none absolute top-3 left-[7px] z-[2] h-[8px] w-[8px] -translate-y-[6px] rounded-bl-[7px] border-b-2 border-l-2 border-[var(--purple-mid)]/40 bg-[var(--surface)]"
                   aria-hidden
                 />
 
                 {index === children.length - 1 && (
                   <span
-                    className="pointer-events-none absolute top-[14px] bottom-0 left-[6px] z-[1] w-[4px] bg-white"
+                    className="pointer-events-none absolute top-[14px] bottom-0 left-[6px] z-[1] w-[4px] bg-[var(--surface)]"
                     aria-hidden
                   />
                 )}
@@ -140,7 +147,7 @@ function CommentBody({
     e.preventDefault();
     const text = body.trim();
     if (!text) {
-      alert("Please write a comment first.");
+      setError("Please write a comment first.");
       return;
     }
 
@@ -177,7 +184,8 @@ function CommentBody({
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <p className="text-[11px] text-[var(--muted)]">
+        <p className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)]">
+          <IconUser className="h-3 w-3" />
           {comment.authorName} · {comment.createdAt}
         </p>
         {isOwner && !editing && (
@@ -186,16 +194,18 @@ function CommentBody({
               type="button"
               onClick={startEdit}
               disabled={busy}
-              className="text-[11px] font-semibold text-[var(--muted)] transition hover:text-[var(--purple)] disabled:opacity-60"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--muted)] transition hover:text-[var(--purple)] disabled:opacity-60"
             >
+              <IconEdit className="h-3 w-3" />
               Edit
             </button>
             <button
               type="button"
               onClick={handleDelete}
               disabled={busy}
-              className="text-[11px] font-semibold text-red-600 transition hover:text-red-700 disabled:opacity-60"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-600 transition hover:text-red-700 disabled:opacity-60"
             >
+              <IconTrash className="h-3 w-3" />
               Delete
             </button>
           </div>
@@ -210,15 +220,29 @@ function CommentBody({
         <form onSubmit={handleSave} className="mt-1">
           <textarea
             value={body}
-            onChange={(e) => setBody(e.target.value)}
+            onChange={(e) => {
+              setBody(e.target.value);
+              if (error) setError(null);
+            }}
             disabled={busy}
             rows={2}
-            className="w-full resize-y rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[13px] text-[var(--ink)] outline-none focus:border-[var(--purple)] focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60"
+            className={[
+              "w-full resize-y rounded-xl border bg-[var(--paper)] px-3 py-2 text-[13px] text-[var(--ink)] outline-none focus:ring-2 focus:ring-[var(--purple)]/20 disabled:opacity-60",
+              error
+                ? "border-red-400 focus:border-red-400"
+                : "border-[var(--line)] focus:border-[var(--purple)]",
+            ].join(" ")}
           />
+          {error && (
+            <p className="mt-1 text-[12px] font-medium text-red-600">{error}</p>
+          )}
           <div className="mt-1.5 flex justify-end gap-2">
             <button
               type="button"
-              onClick={() => setEditing(false)}
+              onClick={() => {
+                setEditing(false);
+                setError(null);
+              }}
               disabled={busy}
               className="text-[11px] font-semibold text-[var(--muted)]"
             >
@@ -235,7 +259,9 @@ function CommentBody({
         </form>
       )}
 
-      {error && <p className="mt-1 text-[11px] text-red-600">{error}</p>}
+      {error && !editing && (
+        <p className="mt-1 text-[12px] font-medium text-red-600">{error}</p>
+      )}
 
       {!editing && (
         <div className="mt-1.5 flex flex-wrap items-center gap-3">
@@ -249,8 +275,9 @@ function CommentBody({
             <button
               type="button"
               onClick={() => setShowReply((v) => !v)}
-              className="text-[11px] font-semibold text-[var(--muted)] transition hover:text-[var(--purple)]"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--muted)] transition hover:text-[var(--purple)]"
             >
+              <IconReply className="h-3 w-3" />
               {showReply ? "Cancel" : "Reply"}
             </button>
           )}
@@ -261,7 +288,7 @@ function CommentBody({
               className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--purple)] transition hover:text-[var(--purple-deep)]"
               aria-expanded={childrenOpen}
             >
-              <ChevronTiny
+              <IconChevronRight
                 className={`h-3 w-3 transition-transform ${childrenOpen ? "rotate-90" : ""}`}
               />
               {childrenOpen
@@ -290,19 +317,4 @@ function CommentBody({
   );
 }
 
-function ChevronTiny({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="m9 6 6 6-6 6" />
-    </svg>
-  );
-}
+
