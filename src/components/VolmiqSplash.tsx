@@ -408,9 +408,9 @@ export function VolmiqSplash({
               </feMerge>
             </filter>
 
-            {/* Unused placeholder kept for id stability if needed */}
+            {/* Pass-through filter (id kept for refs) */}
             <filter id={fRib} x="-10%" y="-10%" width="120%" height="120%">
-              <feIdentity />
+              <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" />
             </filter>
 
             <radialGradient id={fFloor} cx="50%" cy="80%" r="50%">

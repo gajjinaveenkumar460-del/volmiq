@@ -91,6 +91,9 @@ export function VoteButtons({
   const upActive = myVote === 1;
   const downActive = myVote === -1;
 
+  const btnBase =
+    "flex items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:opacity-60";
+
   if (variant === "inline") {
     return (
       <div className={`inline-flex flex-col items-start gap-1 ${className}`}>
@@ -101,15 +104,11 @@ export function VoteButtons({
             onClick={(e) => handleVote(1, e)}
             aria-label="Upvote"
             aria-pressed={upActive}
-            className={
-              upActive
-                ? "flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--purple-soft)] text-[var(--purple)] disabled:opacity-60"
-                : "flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)] disabled:opacity-60"
-            }
+            className={`${btnBase} h-7 w-7`}
           >
             <IconChevronUp className="h-3.5 w-3.5" />
           </button>
-          <span className="min-w-[1.5rem] text-center text-[12px] font-bold tabular-nums text-[var(--purple)]">
+          <span className="min-w-[1.5rem] text-center text-[12px] font-bold tabular-nums text-[var(--ink-soft)]">
             {score}
           </span>
           <button
@@ -118,11 +117,7 @@ export function VoteButtons({
             onClick={(e) => handleVote(-1, e)}
             aria-label="Downvote"
             aria-pressed={downActive}
-            className={
-              downActive
-                ? "flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--purple-soft)] text-[var(--purple)] disabled:opacity-60"
-                : "flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)] disabled:opacity-60"
-            }
+            className={`${btnBase} h-7 w-7`}
           >
             <IconChevronDown className="h-3.5 w-3.5" />
           </button>
@@ -146,15 +141,11 @@ export function VoteButtons({
         onClick={(e) => handleVote(1, e)}
         aria-label="Upvote"
         aria-pressed={upActive}
-        className={
-          upActive
-            ? "flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--purple-soft)] text-[var(--purple)] disabled:opacity-60"
-            : "flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)] disabled:opacity-60"
-        }
+        className={`${btnBase} h-8 w-8`}
       >
         <IconChevronUp className="h-4 w-4" />
       </button>
-      <span className="text-sm font-bold tabular-nums text-[var(--purple)]">
+      <span className="text-sm font-bold tabular-nums text-[var(--ink-soft)]">
         {score}
       </span>
       <button
@@ -163,11 +154,7 @@ export function VoteButtons({
         onClick={(e) => handleVote(-1, e)}
         aria-label="Downvote"
         aria-pressed={downActive}
-        className={
-          downActive
-            ? "flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--purple-soft)] text-[var(--purple)] disabled:opacity-60"
-            : "flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--purple-soft)] hover:text-[var(--purple)] disabled:opacity-60"
-        }
+        className={`${btnBase} h-8 w-8`}
       >
         <IconChevronDown className="h-4 w-4" />
       </button>
