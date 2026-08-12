@@ -1,4 +1,4 @@
-import { createBrowserClient } from "@supabase/ssr";
+import { createBrowserClient, type SupabaseClient } from "@supabase/ssr";
 
 function getBrowserEnv() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -8,7 +8,7 @@ function getBrowserEnv() {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL and a key (NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) in .env.local",
+      "Missing NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY. Set them in Vercel → Project → Settings → Environment Variables (Production), then redeploy.",
     );
   }
 
@@ -17,13 +17,26 @@ function getBrowserEnv() {
 
 /**
  * Browser client for Client Components (uses cookies via @supabase/ssr).
- * Call createClient() in components when you need a fresh instance;
- * `supabase` is a shared browser client for existing data helpers.
  */
 export function createClient() {
   const { supabaseUrl, supabaseAnonKey } = getBrowserEnv();
   return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }
 
-/** Shared browser client — keeps current imports working */
-export const supabase = createClient();
+/** Lazy shared client — avoids crashing at import time during builds */
+let _supabase: SupabaseClient | null = null;
+
+function getSharedClient(): SupabaseClient {
+  if (!_supabase) {
+    _supabase = createClient();
+  }
+  return _supabase;
+}
+
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop, receiver) {
+    const client = getSharedClient();
+    const value = Reflect.get(client, prop, receiver);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
