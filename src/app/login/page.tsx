@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthForm } from "@/components/auth/AuthForm";
 
@@ -19,7 +20,9 @@ export default async function LoginPage({ searchParams }: PageProps) {
       showHeaderActions={false}
       mainClassName="relative z-[1] min-w-0 w-full flex-1 overflow-hidden p-0"
     >
-      <AuthForm next={next} />
+      <Suspense fallback={<div className="login-viewport" />}>
+        <AuthForm next={next} />
+      </Suspense>
     </AppShell>
   );
 }

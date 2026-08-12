@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { AuthButton } from "@/components/auth/AuthButton";
 import { HeaderSearch } from "@/components/layout/HeaderSearch";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import { IconAsk, IconClose, IconMenu, IconSearch } from "@/components/ui/Icons";
 import Link from "next/link";
 
@@ -74,6 +75,7 @@ export function AppHeader({
               <span className="hidden sm:inline">Ask a Question</span>
               <span className="sm:hidden">Ask</span>
             </Link>
+            <NotificationBell />
             <AuthButton />
           </div>
         )}

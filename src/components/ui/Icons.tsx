@@ -259,3 +259,13 @@ export function IconLayers(p: IconProps) {
     p,
   );
 }
+
+export function IconBell(p: IconProps) {
+  return base(
+    <>
+      <path d="M6 9a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9" />
+      <path d="M10 21a2 2 0 0 0 4 0" />
+    </>,
+    p,
+  );
+}

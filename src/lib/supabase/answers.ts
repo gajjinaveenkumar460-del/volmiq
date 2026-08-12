@@ -46,7 +46,17 @@ export async function createAnswer(input: CreateAnswerInput): Promise<Answer> {
     throw new Error(error.message);
   }
 
-  return mapDbAnswer(data as AnswerRow);
+  const answer = mapDbAnswer(data as AnswerRow);
+
+  // Optional email to question author (no-op without Resend + service role)
+  void import("@/lib/supabase/notifications").then(({ requestAnswerEmailNotification }) =>
+    requestAnswerEmailNotification({
+      postId: answer.postId,
+      answerId: answer.id,
+    }),
+  );
+
+  return answer;
 }
 
 /**

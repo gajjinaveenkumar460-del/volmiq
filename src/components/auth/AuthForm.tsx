@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { safeNextPath } from "@/lib/auth/safeNextPath";
 import { createClient } from "@/lib/supabase/client";
 import "./login-motion.css";
@@ -18,6 +18,7 @@ type AuthFormProps = {
 
 export function AuthForm({ next }: AuthFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const returnTo = safeNextPath(next, "/");
 
   const [mode, setMode] = useState<Mode>("signin");
@@ -26,6 +27,12 @@ export function AuthForm({ next }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("error") === "auth") {
+      setError("Google sign-in failed or was cancelled. Try again.");
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -62,6 +69,30 @@ export function AuthForm({ next }: AuthFormProps) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Authentication failed");
     } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogle() {
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const supabase = createClient();
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`,
+        },
+      });
+      if (oauthError) throw oauthError;
+      // Browser redirects to Google; no further action
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Google sign-in failed. Enable Google in Supabase Auth → Providers.",
+      );
       setLoading(false);
     }
   }
@@ -171,6 +202,22 @@ export function AuthForm({ next }: AuthFormProps) {
             </button>
           </div>
 
+          <div className="login-or" aria-hidden={false}>
+            <span />
+            <em>or</em>
+            <span />
+          </div>
+
+          <button
+            type="button"
+            disabled={loading}
+            onClick={handleGoogle}
+            className="login-google"
+          >
+            <GoogleGlyph />
+            Continue with Google
+          </button>
+
           <p className="login-switch">
             {mode === "signin" ? (
               <>
@@ -212,5 +259,16 @@ export function AuthForm({ next }: AuthFormProps) {
         </p>
       </div>
     </div>
+  );
+}
+
+function GoogleGlyph() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="#EA4335"
+        d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.6-2.5-5.6-5.6S8.9 6.2 12 6.2c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.8 14.6 3 12 3 6.9 3 2.8 7.1 2.8 12.2S6.9 21.4 12 21.4c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1-.2-1.5H12z"
+      />
+    </svg>
   );
 }

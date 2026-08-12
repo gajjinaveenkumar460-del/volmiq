@@ -13,6 +13,7 @@ import {
   IconUser,
 } from "@/components/ui/Icons";
 import { draftKeys, hasDraft } from "@/lib/drafts";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { deleteComment, updateComment } from "@/lib/supabase/comments";
 
 type CommentItemProps = {
@@ -136,6 +137,7 @@ function CommentBody({
   const [body, setBody] = useState(comment.body);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function startEdit() {
     setBody(comment.body);
@@ -164,16 +166,12 @@ function CommentBody({
     }
   }
 
-  async function handleDelete() {
-    const ok = window.confirm(
-      "Delete this comment? Replies under it may also be removed.",
-    );
-    if (!ok) return;
-
+  async function handleDeleteConfirmed() {
     setBusy(true);
     setError(null);
     try {
       await deleteComment(comment.id);
+      setConfirmDelete(false);
       await onChanged();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete");
@@ -201,7 +199,7 @@ function CommentBody({
             </button>
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={() => setConfirmDelete(true)}
               disabled={busy}
               className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-600 transition hover:text-red-700 disabled:opacity-60"
             >
@@ -313,6 +311,18 @@ function CommentBody({
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete this comment?"
+        description="Replies under it may also be removed. This cannot be undone."
+        confirmLabel="Delete comment"
+        busy={busy}
+        onCancel={() => {
+          if (!busy) setConfirmDelete(false);
+        }}
+        onConfirm={handleDeleteConfirmed}
+      />
     </>
   );
 }

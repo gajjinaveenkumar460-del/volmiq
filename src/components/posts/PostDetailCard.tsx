@@ -13,6 +13,7 @@ import {
   IconTrash,
   IconUser,
 } from "@/components/ui/Icons";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RoomSelect } from "@/components/ui/RoomSelect";
 import { deletePost, updatePost } from "@/lib/supabase/posts";
 
@@ -42,6 +43,7 @@ export function PostDetailCard({
   const [communitySlug, setCommunitySlug] = useState(initialPost.communitySlug);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{
     room?: string;
     title?: string;
@@ -97,16 +99,12 @@ export function PostDetailCard({
     }
   }
 
-  async function handleDelete() {
-    const ok = window.confirm(
-      "Delete this question? Answers and comments under it may also be removed. This cannot be undone.",
-    );
-    if (!ok) return;
-
+  async function handleDeleteConfirmed() {
     setBusy(true);
     setError(null);
     try {
       await deletePost(post.id);
+      setConfirmDelete(false);
       router.push("/my");
       router.refresh();
     } catch (err) {
@@ -145,12 +143,12 @@ export function PostDetailCard({
                 </button>
                 <button
                   type="button"
-                  onClick={handleDelete}
+                  onClick={() => setConfirmDelete(true)}
                   disabled={busy}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-[var(--surface)] px-3 py-1.5 text-[12px] font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
                 >
                   <IconTrash className="h-3.5 w-3.5" />
-                  {busy ? "…" : "Delete"}
+                  Delete
                 </button>
               </div>
             )}
@@ -275,6 +273,18 @@ export function PostDetailCard({
           </Link>
         </p>
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete this question?"
+        description="Answers and comments under it may also be removed. This cannot be undone."
+        confirmLabel="Delete question"
+        busy={busy}
+        onCancel={() => {
+          if (!busy) setConfirmDelete(false);
+        }}
+        onConfirm={handleDeleteConfirmed}
+      />
     </article>
   );
 }

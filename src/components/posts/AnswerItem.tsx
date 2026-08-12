@@ -11,6 +11,7 @@ import {
   IconTrash,
   IconUser,
 } from "@/components/ui/Icons";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { deleteAnswer, updateAnswer } from "@/lib/supabase/answers";
 
 type AnswerItemProps = {
@@ -45,6 +46,7 @@ export function AnswerItem({
   const [body, setBody] = useState(answer.body);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function startEdit() {
     setBody(answer.body);
@@ -73,16 +75,12 @@ export function AnswerItem({
     }
   }
 
-  async function handleDelete() {
-    const ok = window.confirm(
-      "Delete this answer? Comments under it may also be removed. This cannot be undone.",
-    );
-    if (!ok) return;
-
+  async function handleDeleteConfirmed() {
     setBusy(true);
     setError(null);
     try {
       await deleteAnswer(answer.id);
+      setConfirmDelete(false);
       onDeleted(answer.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete");
@@ -152,12 +150,12 @@ export function AnswerItem({
               </button>
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={() => setConfirmDelete(true)}
                 disabled={busy}
                 className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-[var(--surface)] px-2.5 py-1 text-[11px] font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
               >
                 <IconTrash className="h-3.5 w-3.5" />
-                {busy ? "…" : "Delete"}
+                Delete
               </button>
             </>
           )}
@@ -230,6 +228,18 @@ export function AnswerItem({
       )}
 
       <AnswerComments answerId={answer.id} />
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete this answer?"
+        description="Comments under it may also be removed. This cannot be undone."
+        confirmLabel="Delete answer"
+        busy={busy}
+        onCancel={() => {
+          if (!busy) setConfirmDelete(false);
+        }}
+        onConfirm={handleDeleteConfirmed}
+      />
     </li>
   );
 }

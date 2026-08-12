@@ -366,3 +366,7 @@ create policy "votes_delete_own"
   on public.votes for delete
   to authenticated
   using (auth.uid() = user_id);
+
+
+-- See also: notifications.sql (answer notifications for question authors)
+
