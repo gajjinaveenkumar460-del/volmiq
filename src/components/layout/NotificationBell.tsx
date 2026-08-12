@@ -114,7 +114,7 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={handleOpen}
-        className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--ink)] shadow-sm transition hover:border-[var(--purple)]/30 hover:bg-[var(--purple-soft)]"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--ink)] shadow-sm transition hover:border-[var(--purple)]/30 hover:bg-[var(--purple-soft)] sm:h-10 sm:w-10"
         aria-label={
           unread > 0 ? `Notifications, ${unread} unread` : "Notifications"
         }
@@ -129,30 +129,38 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-[80] mt-2 w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-xl shadow-[var(--ink)]/10">
-          <div className="flex items-center justify-between border-b border-[var(--line)] px-3.5 py-2.5">
-            <p className="text-[13px] font-bold text-[var(--ink)]">
+        <div
+          className={[
+            "z-[80] overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-xl shadow-[var(--ink)]/15",
+            // Mobile: fixed panel under 2-row header (search sits below top bar)
+            "fixed top-[7rem] right-3 left-3",
+            // Desktop: dropdown under the bell
+            "sm:absolute sm:top-auto sm:right-0 sm:left-auto sm:mt-2 sm:w-[22rem]",
+          ].join(" ")}
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-3.5 py-2.5">
+            <p className="min-w-0 truncate text-[13px] font-bold text-[var(--ink)]">
               Notifications
             </p>
             {unread > 0 && (
               <button
                 type="button"
                 onClick={handleMarkAll}
-                className="text-[11px] font-semibold text-[var(--purple)] hover:text-[var(--purple-deep)]"
+                className="shrink-0 text-[11px] font-semibold text-[var(--purple)] hover:text-[var(--purple-deep)]"
               >
                 Mark all read
               </button>
             )}
           </div>
 
-          <div className="max-h-[min(22rem,50vh)] overflow-y-auto">
+          <div className="max-h-[min(22rem,55vh)] overflow-y-auto overscroll-contain">
             {loading && (
               <p className="px-3.5 py-6 text-center text-[13px] text-[var(--muted)]">
                 Loading…
               </p>
             )}
             {!loading && error && (
-              <p className="px-3.5 py-4 text-[12px] leading-relaxed text-[var(--muted)]">
+              <p className="px-3.5 py-4 text-[12px] leading-relaxed break-words text-[var(--muted)]">
                 Could not load notifications. Run{" "}
                 <code className="rounded bg-[var(--paper)] px-1 text-[11px]">
                   supabase/notifications.sql
@@ -178,7 +186,7 @@ export function NotificationBell() {
                     !n.readAt ? "bg-[var(--purple-soft)]/50" : "bg-white",
                   ].join(" ")}
                 >
-                  <p className="text-[13px] leading-snug font-medium text-[var(--ink)]">
+                  <p className="text-[13px] leading-snug font-medium break-words text-[var(--ink)]">
                     {n.body}
                   </p>
                   <p className="mt-1 text-[11px] text-[var(--muted)]">

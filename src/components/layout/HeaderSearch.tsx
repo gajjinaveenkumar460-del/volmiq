@@ -4,12 +4,17 @@ import { FormEvent, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { IconSearch } from "@/components/ui/Icons";
 
+type HeaderSearchProps = {
+  /** Tighter mobile bar under the main header */
+  compact?: boolean;
+};
+
 /**
  * Nexora-style pill search.
  * Enter with text → /search?q=…
  * Clear box (no Enter) → home feed with all posts.
  */
-export function HeaderSearch() {
+export function HeaderSearch({ compact = false }: HeaderSearchProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -47,22 +52,35 @@ export function HeaderSearch() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative mx-auto min-w-0 max-w-xl flex-1"
+      className={
+        compact
+          ? "relative w-full min-w-0"
+          : "relative mx-auto min-w-0 max-w-xl flex-1"
+      }
       role="search"
     >
-      <label className="sr-only" htmlFor="vol-search">
+      <label className="sr-only" htmlFor={compact ? "vol-search-mobile" : "vol-search"}>
         Search
       </label>
-      <div className="flex h-11 items-center gap-2.5 rounded-full border border-[var(--line)] bg-[var(--paper)] px-4 shadow-sm transition focus-within:border-[var(--purple)]/40 focus-within:bg-white focus-within:ring-4 focus-within:ring-[var(--purple)]/10">
+      <div
+        className={[
+          "flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--paper)] shadow-sm transition focus-within:border-[var(--purple)]/40 focus-within:bg-white focus-within:ring-4 focus-within:ring-[var(--purple)]/10",
+          compact ? "h-10 px-3" : "h-11 gap-2.5 px-4",
+        ].join(" ")}
+      >
         <IconSearch className="h-4 w-4 shrink-0 text-[var(--muted)]" />
         <input
-          id="vol-search"
+          id={compact ? "vol-search-mobile" : "vol-search"}
           type="search"
           value={value}
           onChange={(e) => handleChange(e.target.value)}
-          placeholder="Search for knowledge, people or communities…"
+          placeholder={
+            compact
+              ? "Search questions…"
+              : "Search for knowledge, people or communities…"
+          }
           autoComplete="off"
-          className="w-full bg-transparent text-[13px] font-medium text-[var(--ink)] outline-none placeholder:text-[var(--muted)]/75"
+          className="w-full min-w-0 bg-transparent text-[13px] font-medium text-[var(--ink)] outline-none placeholder:text-[var(--muted)]/75"
         />
       </div>
     </form>

@@ -75,8 +75,8 @@ export function HomeFeed() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
       {/* Rooms + sort */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-h-9 flex-wrap gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex min-h-9 max-w-full flex-wrap gap-2">
           {loading && communities.length === 0 ? (
             <ChipsSkeleton count={5} />
           ) : (
