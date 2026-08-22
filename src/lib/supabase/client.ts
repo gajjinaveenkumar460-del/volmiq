@@ -2,18 +2,27 @@ import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 function getBrowserEnv() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey =
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabaseAnonKey = (
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  )?.trim();
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY. Set them in Vercel → Project → Settings → Environment Variables (Production), then redeploy.",
+  const missing: string[] = [];
+  if (!supabaseUrl) missing.push("NEXT_PUBLIC_SUPABASE_URL");
+  if (!supabaseAnonKey) {
+    missing.push(
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)",
     );
   }
 
-  return { supabaseUrl, supabaseAnonKey };
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing ${missing.join(" and ")}. In Vercel → Settings → Environment Variables, add them for Production, then Deployments → Redeploy with “Use existing Build Cache” turned OFF.`,
+    );
+  }
+
+  return { supabaseUrl: supabaseUrl!, supabaseAnonKey: supabaseAnonKey! };
 }
 
 /**
