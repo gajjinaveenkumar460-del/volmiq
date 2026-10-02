@@ -39,7 +39,7 @@ export function CommentItem({
 }: CommentItemProps) {
   const replyDraftKey = draftKeys.comment(answerId, comment.id);
   const [showReply, setShowReply] = useState(false);
-  const [childrenOpen, setChildrenOpen] = useState(true);
+  const [childrenOpen, setChildrenOpen] = useState(false);
   const children = comment.children ?? [];
   const canReply = depth < MAX_REPLY_DEPTH;
   const hasChildren = children.length > 0;
@@ -306,7 +306,10 @@ function CommentBody({
           onCancel={() => setShowReply(false)}
           onSubmit={async (text) => {
             const posted = await onReply(comment.id, text);
-            if (posted) setShowReply(false);
+            if (posted) {
+              setShowReply(false);
+              setChildrenOpen(true);
+            }
             return posted;
           }}
         />

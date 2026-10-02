@@ -80,9 +80,7 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
       try {
         const flat = await getCommentsByAnswerId(answerId);
         if (!cancelled) {
-          const next = buildCommentTree(flat);
-          setTree(next);
-          if (countComments(next) > 0) setSectionOpen(true);
+          setTree(buildCommentTree(flat));
         }
       } catch {
         if (!cancelled) setTree([]);
