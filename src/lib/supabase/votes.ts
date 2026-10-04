@@ -37,23 +37,21 @@ export async function castVote(
 }
 
 /**
- * Current user's vote for one target (0 if none / not logged in).
+ * Current user's vote for one target (0 if none).
+ * Caller passes the auth user id already loaded by AuthProvider.
  */
 export async function getMyVote(
   targetType: VoteTargetType,
   targetId: string,
+  userId: string,
 ): Promise<MyVote> {
+  if (!userId) return 0;
+
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return 0;
-
   const { data, error } = await supabase
     .from("votes")
     .select("value")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("target_type", targetType)
     .eq("target_id", targetId)
     .maybeSingle();
@@ -73,21 +71,16 @@ export async function getMyVote(
 export async function getMyVotes(
   targetType: VoteTargetType,
   targetIds: string[],
+  userId: string,
 ): Promise<Record<string, MyVote>> {
   const out: Record<string, MyVote> = {};
-  if (targetIds.length === 0) return out;
+  if (!userId || targetIds.length === 0) return out;
 
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return out;
-
   const { data, error } = await supabase
     .from("votes")
     .select("target_id, value")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("target_type", targetType)
     .in("target_id", targetIds);
 

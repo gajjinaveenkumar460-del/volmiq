@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Answer } from "@/types/answer";
+import type { Comment } from "@/types/comment";
 import { AnswerComments } from "@/components/posts/AnswerComments";
 import { VoteButtons } from "@/components/posts/VoteButtons";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -23,6 +24,7 @@ type AnswerItemProps = {
   onDeleted: (answerId: string) => void;
   onScoreChange: (answerId: string, score: number) => void;
   onToggleAccept: (answerId: string) => Promise<void>;
+  initialComments?: Comment[];
 };
 
 /**
@@ -36,6 +38,7 @@ export function AnswerItem({
   onDeleted,
   onScoreChange,
   onToggleAccept,
+  initialComments = [],
 }: AnswerItemProps) {
   const { user } = useAuth();
   const isOwner = Boolean(
@@ -227,7 +230,7 @@ export function AnswerItem({
         </div>
       )}
 
-      <AnswerComments answerId={answer.id} />
+      <AnswerComments answerId={answer.id} initialComments={initialComments} />
 
       <ConfirmDialog
         open={confirmDelete}

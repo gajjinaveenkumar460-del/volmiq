@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
+import { MyVotesProvider } from "@/components/posts/MyVotesProvider";
 import { PostDetailCard } from "@/components/posts/PostDetailCard";
 import { QuestionThread } from "@/components/posts/QuestionThread";
 import { IconArrowLeft } from "@/components/ui/Icons";
 import { getAllCommunities } from "@/lib/supabase/communities";
-import { getAnswersByPostId } from "@/lib/supabase/answers";
-import { getPostById } from "@/lib/supabase/posts";
-import type { Answer } from "@/types/answer";
+import { getPostThread } from "@/lib/supabase/posts";
 import type { Community } from "@/types/community";
 
 type PageProps = {
@@ -17,34 +16,21 @@ type PageProps = {
 export default async function PostDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  let post = null;
-  try {
-    post = await getPostById(id);
-  } catch {
-    post = null;
-  }
+  const [thread, communities] = await Promise.all([
+    getPostThread(id).catch(() => null),
+    getAllCommunities().catch(() => [] as Community[]),
+  ]);
 
-  if (!post) {
+  if (!thread) {
     notFound();
   }
 
-  let initialAnswers: Answer[] = [];
-  try {
-    initialAnswers = await getAnswersByPostId(post.id);
-  } catch {
-    initialAnswers = [];
-  }
-
-  let communities: Community[] = [];
-  let communityName: string | null = null;
-  try {
-    communities = await getAllCommunities();
-    communityName =
-      communities.find((c) => c.slug === post.communitySlug)?.name ?? null;
-  } catch {
-    communities = [];
-    communityName = null;
-  }
+  const { post, answers, commentsByAnswerId } = thread;
+  const communityName =
+    communities.find((c) => c.slug === post.communitySlug)?.name ?? null;
+  const commentIds = Object.values(commentsByAnswerId).flatMap((list) =>
+    list.map((comment) => comment.id),
+  );
 
   return (
     <AppShell>
@@ -57,18 +43,25 @@ export default async function PostDetailPage({ params }: PageProps) {
           <span>Back to feed</span>
         </Link>
 
-        <PostDetailCard
-          initialPost={post}
-          communityName={communityName}
-          communities={communities}
-        />
-
-        <QuestionThread
+        <MyVotesProvider
           postId={post.id}
-          postAuthorId={post.authorId}
-          initialAcceptedAnswerId={post.acceptedAnswerId}
-          initialAnswers={initialAnswers}
-        />
+          answerIds={answers.map((answer) => answer.id)}
+          commentIds={commentIds}
+        >
+          <PostDetailCard
+            initialPost={post}
+            communityName={communityName}
+            communities={communities}
+          />
+
+          <QuestionThread
+            postId={post.id}
+            postAuthorId={post.authorId}
+            initialAcceptedAnswerId={post.acceptedAnswerId}
+            initialAnswers={answers}
+            initialCommentsByAnswerId={commentsByAnswerId}
+          />
+        </MyVotesProvider>
       </div>
     </AppShell>
   );

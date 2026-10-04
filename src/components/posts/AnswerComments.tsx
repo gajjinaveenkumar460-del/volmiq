@@ -27,16 +27,23 @@ import { usePathname, useRouter } from "next/navigation";
 
 type AnswerCommentsProps = {
   answerId: string;
+  /** Loaded with the question. Skips a separate request per answer. */
+  initialComments?: Comment[];
 };
 
-export function AnswerComments({ answerId }: AnswerCommentsProps) {
+export function AnswerComments({
+  answerId,
+  initialComments,
+}: AnswerCommentsProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
   const rootDraftKey = draftKeys.comment(answerId, null);
 
-  const [tree, setTree] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tree, setTree] = useState<Comment[]>(() =>
+    buildCommentTree(initialComments ?? []),
+  );
+  const [loading, setLoading] = useState(initialComments === undefined);
   const [showForm, setShowForm] = useState(false);
   /** Whole comment section under an answer */
   const [sectionOpen, setSectionOpen] = useState(false);
@@ -73,6 +80,8 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
   }, [answerId]);
 
   useEffect(() => {
+    if (initialComments !== undefined) return;
+
     let cancelled = false;
 
     async function load() {
@@ -93,7 +102,7 @@ export function AnswerComments({ answerId }: AnswerCommentsProps) {
     return () => {
       cancelled = true;
     };
-  }, [answerId]);
+  }, [answerId, initialComments]);
 
   /** @returns true if comment was saved */
   async function handleTopLevel(body: string): Promise<boolean> {

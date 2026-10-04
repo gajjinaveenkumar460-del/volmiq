@@ -1,3 +1,5 @@
+import type { Answer, AnswerRow } from "@/types/answer";
+import type { Comment, CommentRow } from "@/types/comment";
 import type {
   CreatePostInput,
   Post,
@@ -6,6 +8,8 @@ import type {
   UpdatePostInput,
 } from "@/types/post";
 import { supabase } from "@/lib/supabase/client";
+import { mapDbAnswers } from "@/lib/supabase/mappers/answers";
+import { mapDbComments } from "@/lib/supabase/mappers/comments";
 import { mapDbPost, mapDbPosts } from "@/lib/supabase/mappers/posts";
 
 /**
@@ -64,6 +68,72 @@ export async function getPostById(id: string): Promise<Post | null> {
 
   if (!data) return null;
   return mapDbPost(data as PostRowWithCounts);
+}
+
+type ThreadAnswerRow = AnswerRow & {
+  comments?: CommentRow[] | null;
+};
+
+type ThreadPostRow = PostRow & {
+  answers?: ThreadAnswerRow[] | null;
+};
+
+export type PostThread = {
+  post: Post;
+  answers: Answer[];
+  /** Flat comments keyed by answer id, oldest first. */
+  commentsByAnswerId: Record<string, Comment[]>;
+};
+
+/**
+ * Question, its answers, and every comment in one round trip.
+ * The detail page used to fetch these one after another.
+ */
+export async function getPostThread(id: string): Promise<PostThread | null> {
+  const { data, error } = await supabase
+    .from("posts")
+    .select(
+      `
+      *,
+      answers!post_id (
+        *,
+        comments (*)
+      )
+    `,
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  if (!data) return null;
+
+  const row = data as ThreadPostRow;
+  const answerRows = Array.isArray(row.answers) ? row.answers : [];
+  const commentsByAnswerId: Record<string, Comment[]> = {};
+  let commentCount = 0;
+
+  for (const answer of answerRows) {
+    const rawComments = (
+      Array.isArray(answer.comments) ? answer.comments : []
+    )
+      .slice()
+      .sort((a, b) => a.created_at.localeCompare(b.created_at));
+    commentsByAnswerId[answer.id] = mapDbComments(rawComments);
+    commentCount += rawComments.length;
+  }
+
+  const post = mapDbPost(row);
+  return {
+    post: {
+      ...post,
+      answerCount: answerRows.length,
+      commentCount,
+    },
+    answers: mapDbAnswers(answerRows),
+    commentsByAnswerId,
+  };
 }
 
 /**

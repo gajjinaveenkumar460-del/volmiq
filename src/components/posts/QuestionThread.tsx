@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Answer } from "@/types/answer";
+import type { Comment } from "@/types/comment";
 import { AnswerForm } from "@/components/posts/AnswerForm";
 import { AnswerItem } from "@/components/posts/AnswerItem";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -18,6 +19,7 @@ type QuestionThreadProps = {
   postAuthorId?: string | null;
   initialAcceptedAnswerId?: string | null;
   initialAnswers: Answer[];
+  initialCommentsByAnswerId?: Record<string, Comment[]>;
 };
 
 /** Accepted first, then highest score; newer first on ties. */
@@ -43,6 +45,7 @@ export function QuestionThread({
   postAuthorId,
   initialAcceptedAnswerId = null,
   initialAnswers,
+  initialCommentsByAnswerId = {},
 }: QuestionThreadProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -138,6 +141,7 @@ export function QuestionThread({
                 onDeleted={handleAnswerDeleted}
                 onScoreChange={handleAnswerScoreChange}
                 onToggleAccept={handleToggleAccept}
+                initialComments={initialCommentsByAnswerId[a.id] ?? []}
               />
             ))}
           </ul>

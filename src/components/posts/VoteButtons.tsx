@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MyVote, VoteTargetType } from "@/types/vote";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useProvidedVote } from "@/components/posts/MyVotesProvider";
 import { IconChevronDown, IconChevronUp } from "@/components/ui/Icons";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
 import { castVote, getMyVote } from "@/lib/supabase/votes";
@@ -29,25 +30,41 @@ export function VoteButtons({
 }: VoteButtonsProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const providedVote = useProvidedVote(targetType, targetId);
   const [score, setScore] = useState(initialScore);
   const [myVote, setMyVote] = useState<MyVote>(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const votedLocally = useRef(false);
 
   useEffect(() => {
     setScore(initialScore);
   }, [initialScore, targetId]);
 
   useEffect(() => {
+    votedLocally.current = false;
+  }, [targetType, targetId]);
+
+  const userId = user?.id;
+
+  useEffect(() => {
+    if (providedVote === undefined) return;
+    if (votedLocally.current) return;
+    setMyVote(providedVote);
+  }, [providedVote, targetType, targetId]);
+
+  useEffect(() => {
+    if (providedVote !== undefined) return;
+
     let cancelled = false;
 
     async function loadMine() {
-      if (!user) {
+      if (!userId) {
         if (!cancelled) setMyVote(0);
         return;
       }
       try {
-        const v = await getMyVote(targetType, targetId);
+        const v = await getMyVote(targetType, targetId, userId);
         if (!cancelled) setMyVote(v);
       } catch {
         if (!cancelled) setMyVote(0);
@@ -58,7 +75,7 @@ export function VoteButtons({
     return () => {
       cancelled = true;
     };
-  }, [targetType, targetId, user]);
+  }, [providedVote, targetType, targetId, userId]);
 
   async function handleVote(value: 1 | -1, e?: React.MouseEvent) {
     e?.preventDefault();
@@ -78,6 +95,7 @@ export function VoteButtons({
     setError(null);
     try {
       const result = await castVote(targetType, targetId, value);
+      votedLocally.current = true;
       setScore(result.score);
       setMyVote(result.myVote);
       onScoreChange?.(result.score);
