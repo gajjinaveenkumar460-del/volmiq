@@ -121,7 +121,7 @@ export function MyAnswers() {
         answers.map((a) => (
           <article key={a.id} className="vol-card p-4 sm:p-5">
             <p className="text-[12px] text-[var(--muted)]">
-              {a.createdAt} · ↑ {a.upvotes}
+              {a.createdAt}
             </p>
             <p className="mt-2 line-clamp-4 text-[14px] leading-relaxed text-[var(--ink)]">
               {a.body}

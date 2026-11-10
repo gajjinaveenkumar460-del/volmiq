@@ -24,51 +24,72 @@ create table if not exists public.votes (
   user_id uuid not null references auth.users (id) on delete cascade,
   target_type text not null check (target_type in ('post', 'answer', 'comment')),
   target_id uuid not null,
-  value smallint not null check (value in (-1, 1)),
+  reaction text not null constraint votes_reaction_check
+    check (reaction in ('like', 'dislike')),
   created_at timestamptz not null default now(),
   unique (user_id, target_type, target_id)
 );
 
-create index if not exists votes_target_idx
-  on public.votes (target_type, target_id);
+-- Migrate existing +/-1 votes to named reactions.
+alter table public.votes add column if not exists reaction text;
 
--- ---------- recompute score ----------
-create or replace function public.recompute_target_score(
-  p_target_type text,
-  p_target_id uuid
-)
-returns integer
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  s integer;
+do $$
 begin
-  select coalesce(sum(value), 0)::integer into s
-  from public.votes
-  where target_type = p_target_type
-    and target_id = p_target_id;
-
-  if p_target_type = 'post' then
-    update public.posts set upvotes = s where id = p_target_id;
-  elsif p_target_type = 'answer' then
-    update public.answers set upvotes = s where id = p_target_id;
-  elsif p_target_type = 'comment' then
-    update public.comments set upvotes = s where id = p_target_id;
-  else
-    raise exception 'invalid target_type: %', p_target_type;
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'votes'
+      and column_name = 'value'
+  ) then
+    execute $migration$
+      update public.votes
+      set reaction = case when value = 1 then 'like' else 'dislike' end
+      where reaction is null
+    $migration$;
   end if;
-
-  return s;
 end;
 $$;
 
--- ---------- cast_vote RPC ----------
-create or replace function public.cast_vote(
+update public.votes
+set reaction = 'like'
+where reaction is null;
+
+alter table public.votes alter column reaction set not null;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'votes_reaction_check'
+      and conrelid = 'public.votes'::regclass
+  ) then
+    alter table public.votes
+      add constraint votes_reaction_check check (reaction in ('like', 'dislike'));
+  end if;
+end;
+$$;
+
+alter table public.votes drop column if exists value;
+
+create index if not exists votes_target_idx
+  on public.votes (target_type, target_id);
+
+-- ---------- no stored score ----------
+-- A reaction is only like or dislike. Drop the old numeric totals.
+drop function if exists public.recompute_target_score(text, uuid);
+
+alter table public.posts drop column if exists upvotes;
+alter table public.answers drop column if exists upvotes;
+alter table public.comments drop column if exists upvotes;
+
+-- ---------- cast_reaction RPC ----------
+drop function if exists public.cast_vote(text, uuid, smallint);
+
+create or replace function public.cast_reaction(
   p_target_type text,
   p_target_id uuid,
-  p_value smallint
+  p_reaction text
 )
 returns json
 language plpgsql
@@ -77,9 +98,8 @@ set search_path = public
 as $$
 declare
   uid uuid := auth.uid();
-  existing smallint;
-  next_value smallint;
-  score integer;
+  existing text;
+  next_reaction text;
 begin
   if uid is null then
     raise exception 'not authenticated';
@@ -89,46 +109,40 @@ begin
     raise exception 'invalid target_type';
   end if;
 
-  if p_value not in (-1, 1) then
-    raise exception 'invalid value';
+  if p_reaction not in ('like', 'dislike') then
+    raise exception 'invalid reaction';
   end if;
 
-  select v.value into existing
+  select v.reaction into existing
   from public.votes v
   where v.user_id = uid
     and v.target_type = p_target_type
     and v.target_id = p_target_id;
 
   if existing is null then
-    insert into public.votes (user_id, target_type, target_id, value)
-    values (uid, p_target_type, p_target_id, p_value);
-    next_value := p_value;
-  elsif existing = p_value then
+    insert into public.votes (user_id, target_type, target_id, reaction)
+    values (uid, p_target_type, p_target_id, p_reaction);
+    next_reaction := p_reaction;
+  elsif existing = p_reaction then
     delete from public.votes
     where user_id = uid
       and target_type = p_target_type
       and target_id = p_target_id;
-    next_value := 0;
+    next_reaction := null;
   else
     update public.votes
-    set value = p_value
+    set reaction = p_reaction
     where user_id = uid
       and target_type = p_target_type
       and target_id = p_target_id;
-    next_value := p_value;
+    next_reaction := p_reaction;
   end if;
 
-  score := public.recompute_target_score(p_target_type, p_target_id);
-
-  return json_build_object(
-    'score', score,
-    'myVote', next_value
-  );
+  return json_build_object('myReaction', next_reaction);
 end;
 $$;
 
-grant execute on function public.cast_vote(text, uuid, smallint) to authenticated;
-grant execute on function public.recompute_target_score(text, uuid) to authenticated;
+grant execute on function public.cast_reaction(text, uuid, text) to authenticated;
 
 -- ---------- delete own post (with children) ----------
 create or replace function public.delete_own_post(p_post_id uuid)
@@ -252,6 +266,17 @@ alter table public.answers enable row level security;
 alter table public.comments enable row level security;
 alter table public.votes enable row level security;
 
+-- General room for questions that are not about one exam or career.
+insert into public.communities (slug, name, description, member_count)
+select
+  'general',
+  'General',
+  'Ask anything that does not belong to one exam or career room.',
+  0
+where not exists (
+  select 1 from public.communities where slug = 'general'
+);
+
 -- communities: public read
 drop policy if exists "communities_select_all" on public.communities;
 create policy "communities_select_all"
@@ -369,4 +394,3 @@ create policy "votes_delete_own"
 
 
 -- See also: notifications.sql (answer notifications for question authors)
-

@@ -41,7 +41,7 @@ export function AppSidebar({ className = "", onNavigate }: AppSidebarProps) {
   return (
     <aside
       id="app-sidebar-mobile"
-      className={`flex h-[calc(100vh-3.5rem)] w-[240px] shrink-0 flex-col border-r border-[var(--line)] bg-[var(--side-bg)] text-[var(--side-ink)] sm:h-[calc(100vh-3.75rem)] ${className}`}
+      className={`flex h-full w-[240px] shrink-0 flex-col border-r border-[var(--line)] bg-[var(--side-bg)] text-[var(--side-ink)] md:h-[calc(100vh-4rem)] ${className}`}
     >
       <div className="flex flex-1 flex-col px-3 pt-6 pb-4">
         <nav className="flex flex-col gap-0">

@@ -6,7 +6,6 @@ export type Answer = {
   authorId?: string | null;
   body: string;
   createdAt: string;
-  upvotes: number;
 };
 
 export type AnswerRow = {
@@ -16,7 +15,6 @@ export type AnswerRow = {
   author_id?: string | null;
   body: string;
   created_at: string;
-  upvotes: number;
 };
 
 /** Payload for creating an answer */

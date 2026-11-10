@@ -266,7 +266,6 @@ function CommentBody({
           <VoteButtons
             targetType="comment"
             targetId={comment.id}
-            initialScore={comment.upvotes}
             variant="inline"
           />
           {canReply && (
@@ -329,5 +328,4 @@ function CommentBody({
     </>
   );
 }
-
 

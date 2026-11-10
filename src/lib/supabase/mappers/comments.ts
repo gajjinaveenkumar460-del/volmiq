@@ -12,7 +12,6 @@ export function mapDbComment(row: CommentRow): Comment {
     authorId: row.author_id ?? null,
     body: row.body ?? "",
     createdAt: row.created_at.slice(0, 10),
-    upvotes: row.upvotes ?? 0,
   };
 }
 

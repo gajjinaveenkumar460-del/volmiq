@@ -2,44 +2,37 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { MyVote, VoteTargetType } from "@/types/vote";
+import type { MyReaction, VoteTargetType } from "@/types/vote";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useProvidedVote } from "@/components/posts/MyVotesProvider";
-import { IconChevronDown, IconChevronUp } from "@/components/ui/Icons";
+import {
+  IconThumbsDown,
+  IconThumbsUp,
+} from "@/components/ui/Icons";
 import { loginWithNext } from "@/lib/auth/safeNextPath";
-import { castVote, getMyVote } from "@/lib/supabase/votes";
+import { castReaction, getMyReaction } from "@/lib/supabase/votes";
 
 type VoteButtonsProps = {
   targetType: VoteTargetType;
   targetId: string;
-  initialScore: number;
   /** "column" = feed card; "inline" = answer / comment / detail */
   variant?: "column" | "inline";
   className?: string;
-  /** Called after a successful vote with the new score */
-  onScoreChange?: (score: number) => void;
 };
 
 export function VoteButtons({
   targetType,
   targetId,
-  initialScore,
   variant = "column",
   className = "",
-  onScoreChange,
 }: VoteButtonsProps) {
   const router = useRouter();
   const { user } = useAuth();
   const providedVote = useProvidedVote(targetType, targetId);
-  const [score, setScore] = useState(initialScore);
-  const [myVote, setMyVote] = useState<MyVote>(0);
+  const [myReaction, setMyReaction] = useState<MyReaction>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const votedLocally = useRef(false);
-
-  useEffect(() => {
-    setScore(initialScore);
-  }, [initialScore, targetId]);
 
   useEffect(() => {
     votedLocally.current = false;
@@ -50,7 +43,7 @@ export function VoteButtons({
   useEffect(() => {
     if (providedVote === undefined) return;
     if (votedLocally.current) return;
-    setMyVote(providedVote);
+    setMyReaction(providedVote);
   }, [providedVote, targetType, targetId]);
 
   useEffect(() => {
@@ -60,14 +53,14 @@ export function VoteButtons({
 
     async function loadMine() {
       if (!userId) {
-        if (!cancelled) setMyVote(0);
+        if (!cancelled) setMyReaction(null);
         return;
       }
       try {
-        const v = await getMyVote(targetType, targetId, userId);
-        if (!cancelled) setMyVote(v);
+        const reaction = await getMyReaction(targetType, targetId, userId);
+        if (!cancelled) setMyReaction(reaction);
       } catch {
-        if (!cancelled) setMyVote(0);
+        if (!cancelled) setMyReaction(null);
       }
     }
 
@@ -77,7 +70,10 @@ export function VoteButtons({
     };
   }, [providedVote, targetType, targetId, userId]);
 
-  async function handleVote(value: 1 | -1, e?: React.MouseEvent) {
+  async function handleReaction(
+    reaction: Exclude<MyReaction, null>,
+    e?: React.MouseEvent,
+  ) {
     e?.preventDefault();
     e?.stopPropagation();
     if (busy) return;
@@ -94,11 +90,9 @@ export function VoteButtons({
     setBusy(true);
     setError(null);
     try {
-      const result = await castVote(targetType, targetId, value);
+      const updatedReaction = await castReaction(targetType, targetId, reaction);
       votedLocally.current = true;
-      setScore(result.score);
-      setMyVote(result.myVote);
-      onScoreChange?.(result.score);
+      setMyReaction(updatedReaction);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Vote failed");
     } finally {
@@ -106,11 +100,19 @@ export function VoteButtons({
     }
   }
 
-  const upActive = myVote === 1;
-  const downActive = myVote === -1;
+  const likeActive = myReaction === "like";
+  const dislikeActive = myReaction === "dislike";
 
   const btnBase =
-    "flex items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--paper)] hover:text-[var(--ink)] disabled:opacity-60";
+    "flex items-center justify-center rounded-lg border border-transparent text-[var(--muted)] transition disabled:opacity-60";
+
+  const likeBtnClass = likeActive
+    ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"
+    : "hover:bg-[var(--paper)] hover:text-[var(--ink)]";
+
+  const dislikeBtnClass = dislikeActive
+    ? "bg-red-100 text-red-600 ring-1 ring-red-200 hover:bg-red-100"
+    : "hover:bg-[var(--paper)] hover:text-[var(--ink)]";
 
   if (variant === "inline") {
     return (
@@ -119,25 +121,22 @@ export function VoteButtons({
           <button
             type="button"
             disabled={busy}
-            onClick={(e) => handleVote(1, e)}
-            aria-label="Upvote"
-            aria-pressed={upActive}
-            className={`${btnBase} h-7 w-7`}
+            onClick={(e) => handleReaction("like", e)}
+            aria-label="Like"
+            aria-pressed={likeActive}
+            className={`${btnBase} ${likeBtnClass} h-7 w-7`}
           >
-            <IconChevronUp className="h-3.5 w-3.5" />
+            <IconThumbsUp className="h-3.5 w-3.5" />
           </button>
-          <span className="min-w-[1.5rem] text-center text-[12px] font-bold tabular-nums text-[var(--ink-soft)]">
-            {score}
-          </span>
           <button
             type="button"
             disabled={busy}
-            onClick={(e) => handleVote(-1, e)}
-            aria-label="Downvote"
-            aria-pressed={downActive}
-            className={`${btnBase} h-7 w-7`}
+            onClick={(e) => handleReaction("dislike", e)}
+            aria-label="Dislike"
+            aria-pressed={dislikeActive}
+            className={`${btnBase} ${dislikeBtnClass} h-7 w-7`}
           >
-            <IconChevronDown className="h-3.5 w-3.5" />
+            <IconThumbsDown className="h-3.5 w-3.5" />
           </button>
         </div>
         {error && (
@@ -156,25 +155,22 @@ export function VoteButtons({
       <button
         type="button"
         disabled={busy}
-        onClick={(e) => handleVote(1, e)}
-        aria-label="Upvote"
-        aria-pressed={upActive}
-        className={`${btnBase} h-8 w-8`}
+        onClick={(e) => handleReaction("like", e)}
+        aria-label="Like"
+        aria-pressed={likeActive}
+        className={`${btnBase} ${likeBtnClass} h-8 w-8`}
       >
-        <IconChevronUp className="h-4 w-4" />
+        <IconThumbsUp className="h-4 w-4" />
       </button>
-      <span className="text-sm font-bold tabular-nums text-[var(--ink-soft)]">
-        {score}
-      </span>
       <button
         type="button"
         disabled={busy}
-        onClick={(e) => handleVote(-1, e)}
-        aria-label="Downvote"
-        aria-pressed={downActive}
-        className={`${btnBase} h-8 w-8`}
+        onClick={(e) => handleReaction("dislike", e)}
+        aria-label="Dislike"
+        aria-pressed={dislikeActive}
+        className={`${btnBase} ${dislikeBtnClass} h-8 w-8`}
       >
-        <IconChevronDown className="h-4 w-4" />
+        <IconThumbsDown className="h-4 w-4" />
       </button>
       {error && (
         <p className="mt-0.5 max-w-[2.75rem] text-center text-[9px] font-medium leading-tight text-red-600">

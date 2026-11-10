@@ -16,7 +16,7 @@ import {
   saveDraft,
   type AskDraft,
 } from "@/lib/drafts";
-import { getAllCommunities } from "@/lib/supabase/communities";
+import { getAllCommunities, roomSaveError } from "@/lib/supabase/communities";
 import { createPost } from "@/lib/supabase/posts";
 
 export function AskForm() {
@@ -128,7 +128,7 @@ export function AskForm() {
 
       router.push(`/p/${created.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to post question");
+      setError(roomSaveError(err, "Failed to post question"));
     } finally {
       setSubmitting(false);
     }

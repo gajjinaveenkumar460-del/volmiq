@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/Icons";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RoomSelect } from "@/components/ui/RoomSelect";
+import { roomSaveError } from "@/lib/supabase/communities";
 import { deletePost, updatePost } from "@/lib/supabase/posts";
 
 type PostDetailCardProps = {
@@ -93,7 +94,7 @@ export function PostDetailCard({
       setEditing(false);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      setError(roomSaveError(err, "Failed to save"));
     } finally {
       setBusy(false);
     }
@@ -173,7 +174,6 @@ export function PostDetailCard({
             <VoteButtons
               targetType="post"
               targetId={post.id}
-              initialScore={post.upvotes}
               variant="inline"
             />
           </div>

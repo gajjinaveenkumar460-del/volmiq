@@ -235,6 +235,26 @@ export function IconChevronDown(p: IconProps) {
   return base(<path d="m6 10 6 6 6-6" />, p, 2.25);
 }
 
+export function IconThumbsUp(p: IconProps) {
+  return base(
+    <>
+      <path d="M7 10V19H4.5C3.67 19 3 18.33 3 17.5V11.5C3 10.67 3.67 10 4.5 10H7Z" />
+      <path d="M7 10L10 3.5C10.6 2.3 12 2.6 12.2 4.1L12.8 9H18.5C19.88 9 21 10.12 21 11.5L20.2 17.1C20 18.3 18.9 19.1 17.7 19.1H7" />
+    </>,
+    p,
+  );
+}
+
+export function IconThumbsDown(p: IconProps) {
+  return base(
+    <>
+      <path d="M7 14V5H4.5C3.67 5 3 5.67 3 6.5V12.5C3 13.33 3.67 14 4.5 14H7Z" />
+      <path d="M7 14L10 20.5C10.6 21.7 12 21.4 12.2 19.9L12.8 15H18.5C19.88 15 21 13.88 21 12.5L20.2 6.9C20 5.7 18.9 4.9 17.7 4.9H7" />
+    </>,
+    p,
+  );
+}
+
 export function IconSave(p: IconProps) {
   return base(
     <>

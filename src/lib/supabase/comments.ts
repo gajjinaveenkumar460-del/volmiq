@@ -61,7 +61,6 @@ export async function createComment(
       body: input.body,
       author_name: input.authorName ?? "You",
       author_id: input.authorId ?? null,
-      upvotes: 0,
     })
     .select("*")
     .single();

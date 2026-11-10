@@ -76,7 +76,11 @@ export function AppShell({
 
             <div
               className={[
-                "fixed top-14 bottom-0 left-0 z-50 w-[min(260px,88vw)] transform transition-transform duration-200 ease-out sm:top-16 md:hidden",
+                "fixed bottom-0 left-0 z-50 w-[min(260px,88vw)] transform transition-transform duration-200 ease-out md:hidden",
+                // Below the full mobile header. The search row is only under sm.
+                showSearch
+                  ? "top-[calc(7rem+1px)] sm:top-16"
+                  : "top-14 sm:top-16",
                 sidebarOpen
                   ? "translate-x-0"
                   : "pointer-events-none -translate-x-full",

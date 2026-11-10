@@ -7,7 +7,6 @@ export type Comment = {
   authorId?: string | null;
   body: string;
   createdAt: string;
-  upvotes: number;
   children?: Comment[]; // filled when we build a tree
 };
 
@@ -19,7 +18,6 @@ export type CommentRow = {
   author_id?: string | null;
   body: string;
   created_at: string;
-  upvotes: number;
 };
 
 export type CreateCommentInput = {

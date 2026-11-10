@@ -9,10 +9,10 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { getMyVotes } from "@/lib/supabase/votes";
-import type { MyVote, VoteTargetType } from "@/types/vote";
+import { getMyReactions } from "@/lib/supabase/votes";
+import type { MyReaction, VoteTargetType } from "@/types/vote";
 
-type VoteMap = Record<string, MyVote>;
+type VoteMap = Record<string, MyReaction>;
 
 const MyVotesContext = createContext<VoteMap | null>(null);
 
@@ -23,7 +23,7 @@ function voteKey(targetType: VoteTargetType, targetId: string) {
 function fill(
   into: VoteMap,
   targetType: VoteTargetType,
-  votes: Record<string, MyVote>,
+  votes: Record<string, MyReaction>,
 ) {
   for (const [id, value] of Object.entries(votes)) {
     into[voteKey(targetType, id)] = value;
@@ -62,9 +62,9 @@ export function MyVotesProvider({
     const comments = commentKey ? commentKey.split("\0") : [];
 
     Promise.all([
-      getMyVotes("post", [postId], userId),
-      getMyVotes("answer", answers, userId),
-      getMyVotes("comment", comments, userId),
+      getMyReactions("post", [postId], userId),
+      getMyReactions("answer", answers, userId),
+      getMyReactions("comment", comments, userId),
     ])
       .then(([postVotes, answerVotes, commentVotes]) => {
         if (cancelled) return;
@@ -93,8 +93,8 @@ export function MyVotesProvider({
 export function useProvidedVote(
   targetType: VoteTargetType,
   targetId: string,
-): MyVote | undefined {
+): MyReaction | undefined {
   const votes = useContext(MyVotesContext);
   if (!votes) return undefined;
-  return votes[voteKey(targetType, targetId)] ?? 0;
+  return votes[voteKey(targetType, targetId)] ?? null;
 }

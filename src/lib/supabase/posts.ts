@@ -28,27 +28,28 @@ export type FeedSort = "new" | "hot";
 
 /**
  * Fetch all questions from Supabase.
- * sort "new" = newest first; "hot" = highest score, then newest.
+ * sort "new" = newest first.
+ * sort "hot" = most answers and comments, then newest.
  * Includes answerCount and commentCount.
  */
 export async function getAllPosts(sort: FeedSort = "new"): Promise<Post[]> {
-  let query = supabase.from("posts").select(POST_SELECT_WITH_COUNTS);
-
-  if (sort === "hot") {
-    query = query
-      .order("upvotes", { ascending: false })
-      .order("created_at", { ascending: false });
-  } else {
-    query = query.order("created_at", { ascending: false });
-  }
-
-  const { data, error } = await query;
+  const { data, error } = await supabase
+    .from("posts")
+    .select(POST_SELECT_WITH_COUNTS)
+    .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return mapDbPosts(data as PostRowWithCounts[] | null);
+  const posts = mapDbPosts(data as PostRowWithCounts[] | null);
+  if (sort !== "hot") return posts;
+
+  return posts.sort((a, b) => {
+    const aHeat = (a.answerCount ?? 0) + (a.commentCount ?? 0);
+    const bHeat = (b.answerCount ?? 0) + (b.commentCount ?? 0);
+    return bHeat - aHeat;
+  });
 }
 
 /**
@@ -148,7 +149,6 @@ export async function createPost(input: CreatePostInput): Promise<Post> {
       community_slug: input.communitySlug,
       author_name: input.authorName ?? "You",
       author_id: input.authorId ?? null,
-      upvotes: 0,
     })
     .select("*")
     .single();

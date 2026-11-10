@@ -22,7 +22,7 @@ type QuestionThreadProps = {
   initialCommentsByAnswerId?: Record<string, Comment[]>;
 };
 
-/** Accepted first, then highest score; newer first on ties. */
+/** Accepted first, then newest. */
 function sortAnswers(
   list: Answer[],
   acceptedId: string | null | undefined,
@@ -32,7 +32,6 @@ function sortAnswers(
       if (a.id === acceptedId && b.id !== acceptedId) return -1;
       if (b.id === acceptedId && a.id !== acceptedId) return 1;
     }
-    if (b.upvotes !== a.upvotes) return b.upvotes - a.upvotes;
     return b.createdAt.localeCompare(a.createdAt);
   });
 }
@@ -76,15 +75,6 @@ export function QuestionThread({
     });
     setAnswers((prev) => sortAnswers([...prev, created], acceptedAnswerId));
     return true;
-  }
-
-  function handleAnswerScoreChange(answerId: string, score: number) {
-    setAnswers((prev) =>
-      sortAnswers(
-        prev.map((a) => (a.id === answerId ? { ...a, upvotes: score } : a)),
-        acceptedAnswerId,
-      ),
-    );
   }
 
   function handleAnswerUpdated(updated: Answer) {
@@ -139,7 +129,6 @@ export function QuestionThread({
                 canAccept={canAccept}
                 onUpdated={handleAnswerUpdated}
                 onDeleted={handleAnswerDeleted}
-                onScoreChange={handleAnswerScoreChange}
                 onToggleAccept={handleToggleAccept}
                 initialComments={initialCommentsByAnswerId[a.id] ?? []}
               />

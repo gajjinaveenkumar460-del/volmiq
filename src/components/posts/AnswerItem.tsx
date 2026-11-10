@@ -22,7 +22,6 @@ type AnswerItemProps = {
   canAccept: boolean;
   onUpdated: (answer: Answer) => void;
   onDeleted: (answerId: string) => void;
-  onScoreChange: (answerId: string, score: number) => void;
   onToggleAccept: (answerId: string) => Promise<void>;
   initialComments?: Comment[];
 };
@@ -36,7 +35,6 @@ export function AnswerItem({
   canAccept,
   onUpdated,
   onDeleted,
-  onScoreChange,
   onToggleAccept,
   initialComments = [],
 }: AnswerItemProps) {
@@ -223,9 +221,7 @@ export function AnswerItem({
           <VoteButtons
             targetType="answer"
             targetId={answer.id}
-            initialScore={answer.upvotes}
             variant="inline"
-            onScoreChange={(score) => onScoreChange(answer.id, score)}
           />
         </div>
       )}

@@ -1,18 +1,13 @@
 export type VoteTargetType = "post" | "answer" | "comment";
 
-/** User's vote on a target: +1 up, -1 down, 0 none */
-export type MyVote = -1 | 0 | 1;
-
-export type CastVoteResult = {
-  score: number;
-  myVote: MyVote;
-};
+/** The current user's optional reaction to a target. */
+export type MyReaction = "like" | "dislike" | null;
 
 export type VoteRow = {
   id: string;
   user_id: string;
   target_type: VoteTargetType;
   target_id: string;
-  value: -1 | 1;
+  reaction: Exclude<MyReaction, null>;
   created_at: string;
 };

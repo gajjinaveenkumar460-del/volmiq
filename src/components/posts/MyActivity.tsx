@@ -354,7 +354,7 @@ function AnswerActivityCard({ answer }: { answer: Answer }) {
     <article className="vol-card relative p-4 sm:p-5">
       <TypeBadge type="answer" />
       <p className="mt-1.5 text-[12px] text-[var(--muted)]">
-        {answer.createdAt} · ↑ {answer.upvotes}
+        {answer.createdAt}
       </p>
       <p className="mt-2 line-clamp-4 text-[14px] leading-relaxed text-[var(--ink)]">
         {answer.body}

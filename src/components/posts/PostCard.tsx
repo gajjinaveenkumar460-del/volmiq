@@ -23,7 +23,6 @@ export function PostCard({ post }: { post: Post }) {
         <VoteButtons
           targetType="post"
           targetId={post.id}
-          initialScore={post.upvotes}
           variant="column"
         />
       </div>
